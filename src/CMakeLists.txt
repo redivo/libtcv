@@ -1,0 +1,11 @@
+set(LIB_SRCS
+   ${CMAKE_CURRENT_SOURCE_DIR}/sfp.c
+   ${CMAKE_CURRENT_SOURCE_DIR}/tcv.c
+   ${CMAKE_CURRENT_SOURCE_DIR}/xfp.c
+    PARENT_SCOPE
+)
+
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/demo/)
+set(DEMO_SRCS ${DEMO_SRCS}
+    PARENT_SCOPE
+)
