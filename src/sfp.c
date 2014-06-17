@@ -198,7 +198,7 @@ int sfp_get_connector(tcv_t *tcv)
 #define SFP_10G_ETH_COMPLIANCE_REG	BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 0
 #define SFP_10G_ETH_COMPLIANCE_MASK	0xF0
 
-int sfp_get_10g_complience_codes(tcv_t *tcv, tcv_10g_eth_compliance_codes_t *codes)
+int sfp_get_10g_compliance_codes(tcv_t *tcv, tcv_10g_eth_compliance_codes_t *codes)
 {
 	if (tcv == NULL || codes == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
@@ -229,7 +229,7 @@ int sfp_get_10g_complience_codes(tcv_t *tcv, tcv_10g_eth_compliance_codes_t *cod
 #define INFINIBAND_COMPLIANCE_REG	BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 0
 #define INFINIBAND_MASK 0x0F
 
-int sfp_get_infiniband_complience_codes(tcv_t *tcv, tcv_infiniband_compliance_codes_t *codes)
+int sfp_get_infiniband_compliance_codes(tcv_t *tcv, tcv_infiniband_compliance_codes_t *codes)
 {
 	if (tcv == NULL || codes == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
@@ -256,7 +256,7 @@ int sfp_get_infiniband_complience_codes(tcv_t *tcv, tcv_infiniband_compliance_co
 #define ESCON_COMPLIANCE_REG	BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 1
 #define ESCON_MASK 				0xC0
 
-int sfp_get_escon_complience_codes(tcv_t *tcv, tcv_escon_compliance_codes_t *codes)
+int sfp_get_escon_compliance_codes(tcv_t *tcv, tcv_escon_compliance_codes_t *codes)
 {
 	if (tcv == NULL || codes == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
@@ -306,7 +306,7 @@ int sfp_get_escon_complience_codes(tcv_t *tcv, tcv_escon_compliance_codes_t *cod
 #define SONET_COMPLIANCE_REG_1	BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 1
 #define SONET_COMPLIANCE_REG_2	BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 2
 
-int sfp_get_sonet_complience_codes(tcv_t *tcv, tcv_sonet_compliance_codes_t *codes)
+int sfp_get_sonet_compliance_codes(tcv_t *tcv, tcv_sonet_compliance_codes_t *codes)
 {
 	if (tcv == NULL || codes == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
@@ -347,7 +347,7 @@ int sfp_get_sonet_complience_codes(tcv_t *tcv, tcv_sonet_compliance_codes_t *cod
 #define SONET_REACH_SPECIFIER_1	(1 << 4)
 #define SONET_REACH_SPECIFIER_2	(1 << 3)
 
-int sfp_get_sonet_compliences(tcv_t *tcv, tcv_sonet_compliances_t *compliances)
+int sfp_get_sonet_compliances(tcv_t *tcv, tcv_sonet_compliances_t *compliances)
 {
 	tcv_sonet_compliance_codes_t codes;
 	bool spec_bit_1, spec_bit_2;
@@ -360,7 +360,7 @@ int sfp_get_sonet_compliences(tcv_t *tcv, tcv_sonet_compliances_t *compliances)
 	compliances->bmp = 0;
 
 	/* Get set compliance codes */
-	ret = tcv_get_sonet_complience_codes(tcv, &codes);
+	ret = tcv_get_sonet_compliance_codes(tcv, &codes);
 	if (ret < 0)
 		return ret;
 
@@ -416,7 +416,7 @@ int sfp_get_sonet_compliences(tcv_t *tcv, tcv_sonet_compliances_t *compliances)
 
 #define ETH_COMPLIANCE_REG_1	BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 3
 
-int sfp_get_eth_complience_codes(tcv_t *tcv, tcv_eth_compliance_codes_t *codes)
+int sfp_get_eth_compliance_codes(tcv_t *tcv, tcv_eth_compliance_codes_t *codes)
 {
 	if (tcv == NULL || codes == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;

@@ -94,12 +94,12 @@ execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
 
 if (GCC_VERSION VERSION_GREATER 4.8 OR GCC_VERSION VERSION_EQUAL 4.8)
 	message(STATUS "C++11 activated.")
-	add_definitions("-std=c++11")
+	SET(CXX11 "-std=c++11")
 elseif(GCC_VERSION VERSION_GREATER 4.3 OR GCC_VERSION VERSION_EQUAL 4.3)
-	message(WARNING "C++0x activated. If you get any errors update to a compiler which fully supports C++11")
-	add_definitions("-std=c++0x")
+	message(WARNING "Preview C++0x - your compiler may not have full C++11 support")
+	SET(CXX11 "-std=c++0x")
 else ()
-	message(WARNING "Your GCC is quite old -  C++0x will not work!")
+	message(WARNING "Your GCC is quite old - C++11 will not work!")
 endif()
 
 # input Library for profiling is not found by find_library
@@ -138,12 +138,12 @@ endif(BUILD_TEST)
 # Compiler & Linker  configuration
 ################################################################################
 
-SET(GCC_WARNING_FLAGS   " -Wall -Wextra -fmessage-length=0 " )
+SET(GCC_WARNING_FLAGS   " -Wall -Wextra -fmessage-length=0 -Wno-unused-parameter " )
 
 SET(CMAKE_C_FLAGS       " ${CMAKE_C_FLAGS} ${GCC_WARNING_FLAGS} ")
-SET(CMAKE_CXX_FLAGS     " ${CMAKE_CXX_FLAGS} ${GCC_WARNING_FLAGS} ")
+SET(CMAKE_CXX_FLAGS     " ${CMAKE_CXX_FLAGS} ${GCC_WARNING_FLAGS} ${CXX11}")
 
-SET(CMAKE_CXX_FLAGS_RELEASE  " ${CMAKE_CXX_FLAGS_RELEASE} -ffunction-sections -fdata-sections ")
+SET(CMAKE_CXX_FLAGS_RELEASE  " ${CMAKE_CXX_FLAGS_RELEASE} -ffunction-sections -fdata-sections ${CXX11}")
 SET(CMAKE_C_FLAGS_RELEASE  " ${CMAKE_C_FLAGS_RELEASE} -ffunction-sections -fdata-sections ")
 
 SET(CMAKE_EXE_LINKER_FLAGS_RELEASE " ${CMAKE_EXE_LINKER_FLAGS_RELEASE} -Wl,--gc-sections -Wl,-Map,${PROJECT_NAME}.map ")
