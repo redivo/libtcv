@@ -174,7 +174,7 @@ int sfp_get_rate_identifier(tcv_t *tcv);
 /**
  * \brief	Inform the single mode supported length in units of meters.
  * \param	tcv	Pointer to transceiver structure
- * \return	SM length if ok; code error otherwise. If the length is greater 
+ * \return	SM length if ok; code error otherwise. If the length is greater
  *		than 254000m, return TCV_SM_LENGTH_GREATER_THAN_254000M
  */
 int sfp_get_sm_length(tcv_t *tcv);
@@ -183,7 +183,7 @@ int sfp_get_sm_length(tcv_t *tcv);
 /**
  * \brief	Inform the OM2 supported length in units of meters.
  * \param	tcv	Pointer to transceiver structure
- * \return	OM2 length if ok; code error otherwise. If the length is greater 
+ * \return	OM2 length if ok; code error otherwise. If the length is greater
  *		than 2540m, return TCV_OM2_LENGTH_GREATER_THAN_2540M
  */
 int sfp_get_om2_length(tcv_t *tcv);
@@ -368,5 +368,9 @@ int sfp_calculate_cc_ext(tcv_t *tcv);
 
 /******************************************************************************/
 
-#endif /* __LIBTCV_SFP_H__ */
+/**
+ * SFP member function mapping
+ */
+extern const struct tcv_functions sfp_funcs;
 
+#endif /* __LIBTCV_SFP_H__ */
