@@ -61,7 +61,7 @@ typedef int (*i2c_read_cb_t)(int, uint8_t, uint8_t, uint8_t*, uint8_t);
  * \param	size	Size in bytes to be written.
  * \return	0 if ok, error code otherwise.
  */
-typedef int (*i2c_write_cb_t)(int, uint8_t, uint8_t, uint8_t, uint8_t);
+typedef int (*i2c_write_cb_t)(int, uint8_t, uint8_t, uint8_t*, uint8_t);
 
 
 /**

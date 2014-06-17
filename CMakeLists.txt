@@ -1,7 +1,6 @@
 ##
 # Libtcv & test
 #
-# 
 # cmake -DCMAKE_BUILD_TYPE=<BUILD_TYPE> <OPTIONS> <PROJECT_DIR>
 #
 # BUILD_TYPE:
@@ -12,6 +11,10 @@
 # -DBUILD_TEST=OFF
 # -DPROFILE=Off
 # -DCOVERAGE=Off
+#
+# To choose different compiler: (target)
+# cmake  -DCMAKE_C_COMPILER=ppc_6xx-gcc
+#        -DCMAKE_CXX_COMPILER=ppc_6xx-g++
 ##
 IF(NOT CMAKE_BUILD_TYPE)
    SET(CMAKE_BUILD_TYPE Debug
@@ -26,8 +29,8 @@ message(" Configuring for : ${CMAKE_BUILD_TYPE}")
 cmake_minimum_required (VERSION 2.8)
 # Project Name
 project (libtcv)
-# Make will run in verbose mode - set this to off once you are sure cmake is configured nicely
-SET(CMAKE_VERBOSE_MAKEFILE ON)
+# Make will run in verbose mode - for debugging makefiles
+SET(CMAKE_VERBOSE_MAKEFILE OFF)
 # Enable ExternalProject CMake module
 include(ExternalProject)
 
