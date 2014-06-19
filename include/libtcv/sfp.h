@@ -17,9 +17,9 @@
  */
 typedef struct {
 	uint8_t type;	//! Transceiver type
-	unsigned char a0[256];	//! Internal device 0xA0 (Basic info)
-	unsigned char a2[256];	//! Internal device 0xA2 (Digital Diagnostic)
-	unsigned char ac[256];	//! Internal device 0xAc (Internal PHY)
+	uint8_t a0[256];	//! Internal device 0xA0 (Basic info)
+	uint8_t a2[256];	//! Internal device 0xA2 (Digital Diagnostic)
+	uint8_t ac[256];	//! Internal device 0xAc (Internal PHY)
 } sfp_data_t;
 
 /******************************************************************************/
@@ -53,7 +53,7 @@ int sfp_get_connector(tcv_t *tcv);
  * \param	codes	Pointer to variable to be filled with the 10G compliance codes bitmap
  * \return	0 if OK, error code otherwise
  */
-int sfp_get_10g_complience_codes(tcv_t *tcv, tcv_10g_eth_compliance_codes_t *codes);
+int sfp_get_10g_compliance_codes(tcv_t *tcv, tcv_10g_eth_compliance_codes_t *codes);
 
 /******************************************************************************/
 /**
@@ -62,7 +62,7 @@ int sfp_get_10g_complience_codes(tcv_t *tcv, tcv_10g_eth_compliance_codes_t *cod
  * \param	codes	Pointer to variable to be filled with the infiniband compliance codes bitmap
  * \return	0 if OK, error code otherwise
  */
-int sfp_get_infiniband_complience_codes(tcv_t *tcv, tcv_infiniband_compliance_codes_t *codes);
+int sfp_get_infiniband_compliance_codes(tcv_t *tcv, tcv_infiniband_compliance_codes_t *codes);
 
 /******************************************************************************/
 /**
@@ -71,7 +71,7 @@ int sfp_get_infiniband_complience_codes(tcv_t *tcv, tcv_infiniband_compliance_co
  * \param	codes	Pointer to variable to be filled with the infiniband compliance codes bitmap
  * \return	0 if OK, error code otherwise
  */
-int sfp_get_escon_complience_codes(tcv_t *tcv, tcv_escon_compliance_codes_t *codes);
+int sfp_get_escon_compliance_codes(tcv_t *tcv, tcv_escon_compliance_codes_t *codes);
 
 /******************************************************************************/
 /**
@@ -80,7 +80,7 @@ int sfp_get_escon_complience_codes(tcv_t *tcv, tcv_escon_compliance_codes_t *cod
  * \param	codes	Pointer to variable to be filled with the SONET compliance codes bitmap
  * \return	0 if OK, error code otherwise
  */
-int sfp_get_sonet_complience_codes(tcv_t *tcv, tcv_sonet_compliance_codes_t *codes);
+int sfp_get_sonet_compliance_codes(tcv_t *tcv, tcv_sonet_compliance_codes_t *codes);
 
 /******************************************************************************/
 /**
@@ -89,7 +89,7 @@ int sfp_get_sonet_complience_codes(tcv_t *tcv, tcv_sonet_compliance_codes_t *cod
  * \param	compliances	Pointer to variable to be filled with the SONET compliances
  * \return	0 if OK, error code otherwise
  */
-int sfp_get_sonet_compliences(tcv_t *tcv, tcv_sonet_compliances_t *compliances);
+int sfp_get_sonet_compliances(tcv_t *tcv, tcv_sonet_compliances_t *compliances);
 
 /******************************************************************************/
 /**
@@ -98,7 +98,7 @@ int sfp_get_sonet_compliences(tcv_t *tcv, tcv_sonet_compliances_t *compliances);
  * \param	codes	Pointer to variable to be filled with the Ethernet compliance code
  * \return	0 if OK, error code otherwise
  */
-int sfp_get_eth_complience_codes(tcv_t *tcv, tcv_eth_compliance_codes_t *codes);
+int sfp_get_eth_compliance_codes(tcv_t *tcv, tcv_eth_compliance_codes_t *codes);
 
 /******************************************************************************/
 /**
@@ -174,7 +174,8 @@ int sfp_get_rate_identifier(tcv_t *tcv);
 /**
  * \brief	Inform the single mode supported length in units of meters.
  * \param	tcv	Pointer to transceiver structure
- * \return	SM length if ok; code error otherwise. If the length is greater than 254000m, return TCV_SM_LENGTH_GREATER_THAN_254000M
+ * \return	SM length if ok; code error otherwise. If the length is greater
+ *		than 254000m, return TCV_SM_LENGTH_GREATER_THAN_254000M
  */
 int sfp_get_sm_length(tcv_t *tcv);
 
@@ -182,7 +183,8 @@ int sfp_get_sm_length(tcv_t *tcv);
 /**
  * \brief	Inform the OM2 supported length in units of meters.
  * \param	tcv	Pointer to transceiver structure
- * \return	OM2 length if ok; code error otherwise. If the length is greater than 2540m, return TCV_OM2_LENGTH_GREATER_THAN_2540M
+ * \return	OM2 length if ok; code error otherwise. If the length is greater
+ *		than 2540m, return TCV_OM2_LENGTH_GREATER_THAN_2540M
  */
 int sfp_get_om2_length(tcv_t *tcv);
 
@@ -366,5 +368,9 @@ int sfp_calculate_cc_ext(tcv_t *tcv);
 
 /******************************************************************************/
 
-#endif /* __LIBTCV_SFP_H__ */
+/**
+ * SFP member function mapping
+ */
+extern const struct tcv_functions sfp_funcs;
 
+#endif /* __LIBTCV_SFP_H__ */

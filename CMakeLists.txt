@@ -1,7 +1,6 @@
 ##
 # Libtcv & test
 #
-# 
 # cmake -DCMAKE_BUILD_TYPE=<BUILD_TYPE> <OPTIONS> <PROJECT_DIR>
 #
 # BUILD_TYPE:
@@ -11,7 +10,11 @@
 # -DBUILD_DEMO=On
 # -DBUILD_TEST=OFF
 # -DPROFILE=Off
-# -DCOVERAGE=Off
+# -DTEST_COVERAGE=Off
+#
+# To choose different compiler: (target)
+# cmake  -DCMAKE_C_COMPILER=ppc_6xx-gcc
+#        -DCMAKE_CXX_COMPILER=ppc_6xx-g++
 ##
 IF(NOT CMAKE_BUILD_TYPE)
    SET(CMAKE_BUILD_TYPE Debug
@@ -26,8 +29,8 @@ message(" Configuring for : ${CMAKE_BUILD_TYPE}")
 cmake_minimum_required (VERSION 2.8)
 # Project Name
 project (libtcv)
-# Make will run in verbose mode - set this to off once you are sure cmake is configured nicely
-SET(CMAKE_VERBOSE_MAKEFILE ON)
+# Make will run in verbose mode - for debugging makefiles
+# SET(CMAKE_VERBOSE_MAKEFILE On)
 # Enable ExternalProject CMake module
 include(ExternalProject)
 
@@ -94,12 +97,12 @@ execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
 
 if (GCC_VERSION VERSION_GREATER 4.8 OR GCC_VERSION VERSION_EQUAL 4.8)
 	message(STATUS "C++11 activated.")
-	add_definitions("-std=c++11")
+	SET(CXX11 "-std=c++11")
 elseif(GCC_VERSION VERSION_GREATER 4.3 OR GCC_VERSION VERSION_EQUAL 4.3)
-	message(WARNING "C++0x activated. If you get any errors update to a compiler which fully supports C++11")
-	add_definitions("-std=c++0x")
+	message(WARNING "Preview C++0x - your compiler may not have full C++11 support")
+	SET(CXX11 "-std=c++0x")
 else ()
-	message(WARNING "Your GCC is quite old -  C++0x will not work!")
+	message(WARNING "Your GCC is quite old - C++11 will not work!")
 endif()
 
 # input Library for profiling is not found by find_library
@@ -132,30 +135,34 @@ if(BUILD_TEST)
 	# -Dgtest_force_shared_crt=ON
 	# Disable install step
 	INSTALL_COMMAND ""
+	# Empty update command to speed up make - we don't need to constantly check
+	UPDATE_COMMAND ""
  	)
 endif(BUILD_TEST)
 ################################################################################
 # Compiler & Linker  configuration
 ################################################################################
 
-SET(GCC_WARNING_FLAGS   " -Wall -Wextra -fmessage-length=0 " )
+SET(GCC_WARNING_FLAGS   " -Wall -Wextra -fmessage-length=0 -Wno-unused-parameter " )
 
 SET(CMAKE_C_FLAGS       " ${CMAKE_C_FLAGS} ${GCC_WARNING_FLAGS} ")
-SET(CMAKE_CXX_FLAGS     " ${CMAKE_CXX_FLAGS} ${GCC_WARNING_FLAGS} ")
+SET(CMAKE_CXX_FLAGS     " ${CMAKE_CXX_FLAGS} ${GCC_WARNING_FLAGS} ${CXX11}")
 
-SET(CMAKE_CXX_FLAGS_RELEASE  " ${CMAKE_CXX_FLAGS_RELEASE} -ffunction-sections -fdata-sections ")
+SET(CMAKE_CXX_FLAGS_RELEASE  " ${CMAKE_CXX_FLAGS_RELEASE} -ffunction-sections -fdata-sections ${CXX11}")
 SET(CMAKE_C_FLAGS_RELEASE  " ${CMAKE_C_FLAGS_RELEASE} -ffunction-sections -fdata-sections ")
 
 SET(CMAKE_EXE_LINKER_FLAGS_RELEASE " ${CMAKE_EXE_LINKER_FLAGS_RELEASE} -Wl,--gc-sections -Wl,-Map,${PROJECT_NAME}.map ")
 
 if(TEST_COVERAGE)
+    SET(CMAKE_C_FLAGS     " ${CMAKE_C_FLAGS} -g -fprofile-arcs -ftest-coverage ")
     SET(CMAKE_CXX_FLAGS   " ${CMAKE_CXX_FLAGS} -g -fprofile-arcs -ftest-coverage ")
     SET(CMAKE_LINK_FLAGS  " ${CMAKE_LINK_FLAGS} -O0 -g ")
 endif()
 
 if(PROFILE)
-    SET(CMAKE_CXX_FLAGS   " ${CMAKE_CXX_FLAGS} -g -pg ")
-    SET(CMAKE_LINK_FLAGS  " ${CMAKE_LINK_FLAGS} -O2 -g -pg ")
+    SET(CMAKE_C_FLAGS      " ${CMAKE_C_FLAGS} -g  -pg ")
+    SET(CMAKE_CXX_FLAGS    " ${CMAKE_CXX_FLAGS} -g -pg ")
+    SET(CMAKE_LINK_FLAGS   " ${CMAKE_LINK_FLAGS} -O2 -g -pg ")
 endif()
 
 ################################################################################
@@ -202,6 +209,10 @@ if(BUILD_TEST)
 
     # Add Test-Framework and main() to execute test
     TARGET_LINK_LIBRARIES(${TEST_BINARY_NAME} ${RUN_TEST_MAIN} ${UNIT_TEST_LIB} ${THREAD_LIB})
+
+    if(TEST_COVERAGE)
+        TARGET_LINK_LIBRARIES(${TEST_BINARY_NAME}  ${COVERAGE_LIB})
+    endif()
 
     # Call the testBinary with junit-xml output
     add_test(junitout "./${TEST_BIN_DIR}/${TEST_BINARY_NAME}"

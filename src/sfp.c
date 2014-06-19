@@ -7,8 +7,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include "tcv.h"
-#include "sfp.h"
+#include "libtcv/tcv.h"
+#include "libtcv/sfp.h"
 
 /******************************************************************************/
 
@@ -198,7 +198,7 @@ int sfp_get_connector(tcv_t *tcv)
 #define SFP_10G_ETH_COMPLIANCE_REG	BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 0
 #define SFP_10G_ETH_COMPLIANCE_MASK	0xF0
 
-int sfp_get_10g_complience_codes(tcv_t *tcv, tcv_10g_eth_compliance_codes_t *codes)
+int sfp_get_10g_compliance_codes(tcv_t *tcv, tcv_10g_eth_compliance_codes_t *codes)
 {
 	if (tcv == NULL || codes == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
@@ -229,7 +229,7 @@ int sfp_get_10g_complience_codes(tcv_t *tcv, tcv_10g_eth_compliance_codes_t *cod
 #define INFINIBAND_COMPLIANCE_REG	BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 0
 #define INFINIBAND_MASK 0x0F
 
-int sfp_get_infiniband_complience_codes(tcv_t *tcv, tcv_infiniband_compliance_codes_t *codes)
+int sfp_get_infiniband_compliance_codes(tcv_t *tcv, tcv_infiniband_compliance_codes_t *codes)
 {
 	if (tcv == NULL || codes == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
@@ -256,7 +256,7 @@ int sfp_get_infiniband_complience_codes(tcv_t *tcv, tcv_infiniband_compliance_co
 #define ESCON_COMPLIANCE_REG	BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 1
 #define ESCON_MASK 				0xC0
 
-int sfp_get_escon_complience_codes(tcv_t *tcv, tcv_escon_compliance_codes_t *codes)
+int sfp_get_escon_compliance_codes(tcv_t *tcv, tcv_escon_compliance_codes_t *codes)
 {
 	if (tcv == NULL || codes == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
@@ -306,7 +306,7 @@ int sfp_get_escon_complience_codes(tcv_t *tcv, tcv_escon_compliance_codes_t *cod
 #define SONET_COMPLIANCE_REG_1	BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 1
 #define SONET_COMPLIANCE_REG_2	BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 2
 
-int sfp_get_sonet_complience_codes(tcv_t *tcv, tcv_sonet_compliance_codes_t *codes)
+int sfp_get_sonet_compliance_codes(tcv_t *tcv, tcv_sonet_compliance_codes_t *codes)
 {
 	if (tcv == NULL || codes == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
@@ -347,7 +347,7 @@ int sfp_get_sonet_complience_codes(tcv_t *tcv, tcv_sonet_compliance_codes_t *cod
 #define SONET_REACH_SPECIFIER_1	(1 << 4)
 #define SONET_REACH_SPECIFIER_2	(1 << 3)
 
-int sfp_get_sonet_compliences(tcv_t *tcv, tcv_sonet_compliances_t *compliances)
+int sfp_get_sonet_compliances(tcv_t *tcv, tcv_sonet_compliances_t *compliances)
 {
 	tcv_sonet_compliance_codes_t codes;
 	bool spec_bit_1, spec_bit_2;
@@ -360,7 +360,7 @@ int sfp_get_sonet_compliences(tcv_t *tcv, tcv_sonet_compliances_t *compliances)
 	compliances->bmp = 0;
 
 	/* Get set compliance codes */
-	ret = tcv_get_sonet_complience_codes(tcv, &codes);
+	ret = tcv_get_sonet_compliance_codes(tcv, &codes);
 	if (ret < 0)
 		return ret;
 
@@ -416,7 +416,7 @@ int sfp_get_sonet_compliences(tcv_t *tcv, tcv_sonet_compliances_t *compliances)
 
 #define ETH_COMPLIANCE_REG_1	BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 3
 
-int sfp_get_eth_complience_codes(tcv_t *tcv, tcv_eth_compliance_codes_t *codes)
+int sfp_get_eth_compliance_codes(tcv_t *tcv, tcv_eth_compliance_codes_t *codes)
 {
 	if (tcv == NULL || codes == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
@@ -553,6 +553,7 @@ int sfp_get_fibre_channel_media(tcv_t *tcv, tcv_fibre_channel_media_t *media)
 	/* Fill bitmap */
 	media->bmp |= (((sfp_data_t*)tcv->data)->a0[MEDIA_REG] & MEDIA_MASK_1) >> 1;
 	media->bmp |= ((sfp_data_t*)tcv->data)->a0[MEDIA_REG] & MEDIA_MASK_2;
+	return 0;
 }
 
 /******************************************************************************/
@@ -586,6 +587,8 @@ int sfp_get_fibre_channel_speed(tcv_t *tcv, fibre_channel_speed_t *speed)
 	/* Fill bitmap */
 	speed->bmp |= (((sfp_data_t*)tcv->data)->a0[MEDIA_REG] & MEDIA_MASK_1) >> 1;
 	speed->bmp |= ((sfp_data_t*)tcv->data)->a0[MEDIA_REG] & MEDIA_MASK_2;
+
+	return 0;
 }
 
 /******************************************************************************/
@@ -1170,3 +1173,47 @@ int sfp_calculate_cc_ext(tcv_t *tcv)
 
 /******************************************************************************/
 
+/**
+ * Member functions for sfp modules
+ */
+const struct tcv_functions sfp_funcs = {
+	.get_itendifier = sfp_get_itendifier,
+	.get_ext_itendifier = sfp_get_ext_itendifier,
+	.get_connector = sfp_get_connector,
+	.get_vendor_name = sfp_get_vendor_name,
+	.get_vendor_oui = sfp_get_vendor_oui,
+	.get_vendor_revision = sfp_get_vendor_revision,
+	.get_vendor_part_number = sfp_get_vendor_part_number,
+	.get_vendor_serial_number = sfp_get_vendor_sn,
+	.get_vendor_date_code = sfp_get_vendor_date_code,
+	.get_10g_compliance_codes = sfp_get_10g_compliance_codes,
+	.get_infiniband_compliance_codes = sfp_get_infiniband_compliance_codes,
+	.get_escon_compliance_codes = sfp_get_escon_compliance_codes,
+	.get_sonet_compliance_codes = sfp_get_sonet_compliance_codes,
+	.get_eth_compliance_codes = sfp_get_eth_compliance_codes,
+	.get_fibre_channel_link_length = sfp_get_fibre_channel_link_length,
+	.get_fibre_channel_technology  =  sfp_get_fibre_channel_technology,
+	.get_sfp_plus_cable_technology = sfp_get_sfp_plus_cable_technology,
+	.get_fibre_channel_media = sfp_get_fibre_channel_media,
+	.get_fibre_channel_speed = sfp_get_fibre_channel_speed,
+	.get_encoding =  sfp_get_encoding,
+	.get_nominal_bit_rate = sfp_get_nominal_bit_rate,
+	.get_rate_identifier =  sfp_get_rate_identifier,
+	.get_sm_length =  sfp_get_sm_length,
+	.get_om1_length = sfp_get_om1_length,
+	.get_om2_length = sfp_get_om2_length,
+	.get_om3_length = sfp_get_om3_length,
+	.get_om4_copper_length = sfp_get_om4_length_copper_length,
+	.get_wave_len =  sfp_get_wavelength,
+	.get_passive_cable_compliance = sfp_get_passive_cable_compliance,
+	.get_active_cable_compliance = sfp_get_active_cable_compliance,
+	.get_cc_base = sfp_get_cc_base,
+	.calculate_cc_base = sfp_calculate_cc_base,
+	.get_implemented_options = sfp_get_implemented_options,
+	.get_max_bit_rate =  sfp_get_max_bit_rate,
+	.get_min_bit_rate = sfp_get_min_bit_rate,
+	.get_diagnostic_type =  sfp_get_diagnostic_type,
+	.get_enhanced_options = sfp_get_enhance_options,
+	.get_cc_ext = sfp_get_cc_ext,
+	.calculate_cc_ext = sfp_calculate_cc_ext,
+};
