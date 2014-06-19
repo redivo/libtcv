@@ -18,6 +18,7 @@ int tcv_init(tcv_t *tcv, int index, i2c_read_cb_t read, i2c_write_cb_t write)
 {
 	uint8_t identifier;
 	int ret;
+	sfp_data_t * sfp_data;
 
 	/* Check parameters */
 	if (tcv == NULL || read == NULL || write == NULL)
@@ -33,8 +34,15 @@ int tcv_init(tcv_t *tcv, int index, i2c_read_cb_t read, i2c_write_cb_t write)
 
 	switch (identifier) {
 		case TCV_TYPE_SFP:
-			tcv->data = malloc(sizeof(sfp_data_t));
-			((sfp_data_t*)tcv->data)->type = TCV_TYPE_SFP;
+			sfp_data = malloc(sizeof(sfp_data_t));
+			if(!sfp_data)
+				return TCV_ERR_GENERIC;
+			sfp_data->type  = TCV_TYPE_SFP;
+			ret = tcv->read(index, TCV_DEVADDR_A0, 0, sfp_data->a0, sizeof(sfp_data->a0));
+			if(ret < 0 )
+				return ret;
+
+			tcv->data = sfp_data;
 			tcv->fun = &sfp_funcs;
 			break;
 

@@ -553,6 +553,7 @@ int sfp_get_fibre_channel_media(tcv_t *tcv, tcv_fibre_channel_media_t *media)
 	/* Fill bitmap */
 	media->bmp |= (((sfp_data_t*)tcv->data)->a0[MEDIA_REG] & MEDIA_MASK_1) >> 1;
 	media->bmp |= ((sfp_data_t*)tcv->data)->a0[MEDIA_REG] & MEDIA_MASK_2;
+	return 0;
 }
 
 /******************************************************************************/
@@ -586,6 +587,8 @@ int sfp_get_fibre_channel_speed(tcv_t *tcv, fibre_channel_speed_t *speed)
 	/* Fill bitmap */
 	speed->bmp |= (((sfp_data_t*)tcv->data)->a0[MEDIA_REG] & MEDIA_MASK_1) >> 1;
 	speed->bmp |= ((sfp_data_t*)tcv->data)->a0[MEDIA_REG] & MEDIA_MASK_2;
+
+	return 0;
 }
 
 /******************************************************************************/

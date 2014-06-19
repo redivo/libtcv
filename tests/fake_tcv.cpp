@@ -1,6 +1,6 @@
 /************************************************************************************/
 /**
- * \file   mock_tcv.cpp
+ * \file   fake_tcv.cpp
  * \brief  
  * \author  thomas.ruschival
  *  		Created on: Jun 18, 2014
@@ -9,36 +9,34 @@
 
 #include <algorithm>    // std::copy
 #include <vector>
-#include "mock_tcv.hpp"
+#include "fake_tcv.hpp"
 
-namespace mock{
+using namespace std;
 
-MockTCV::MockTCV() :eeprom(PAGESIZE,0xFF), diagnostics_size(0){
-	eeprom[0] = 0x03;
-}
+namespace TestDoubles{
 
 
-
-bool MockTCV::range_is_valid(tcv_dev_addr_t device, std::size_t offset, std::size_t size){
-
-	switch(device){
+bool FakeTCV::range_is_valid(tcv_dev_addr_t device, std::size_t offset,
+        std::size_t len) const
+{
+	std::cout << " Eeprom " << eeprom.size() << " : " << eeprom[8] << std::endl;
+	switch (device) {
 		case a0:
-			return (offset+size >= eeprom.size());
-		case dd:
-			return (offset+size >= diagnostics_size);
+			return (offset + len <= eeprom.size() );
 		default:
 			return false;
 	}
 }
 
-
-int MockTCV::read(tcv_dev_addr_t device, std::uint8_t regaddr, std::uint8_t * data,
-		std::size_t size) const
+int FakeTCV::read(tcv_dev_addr_t device, std::uint8_t regaddr,
+        std::uint8_t * data, std::size_t len) const
 {
-	switch(device){
+	switch (device) {
 		case a0:
-			std::copy(eeprom.begin()+regaddr, eeprom.begin()+regaddr+size, data);
-		break;
+			std::copy(eeprom.begin() + regaddr,
+				        eeprom.begin() + regaddr + len, data);
+			return (regaddr + len <= eeprom.size()) ?  len : eeprom.size()-regaddr;
+			break;
 		case dd: /* dd not implemented */
 		default:
 			return -1;
@@ -48,7 +46,7 @@ int MockTCV::read(tcv_dev_addr_t device, std::uint8_t regaddr, std::uint8_t * da
 }
 
 
-int MockTCV::write(tcv_dev_addr_t device, std::uint8_t regaddr,
+int FakeTCV::write(tcv_dev_addr_t device, std::uint8_t regaddr,
 		const std::uint8_t * data, std::size_t size)
 {
 	if(!range_is_valid(device, regaddr, size))
@@ -56,7 +54,9 @@ int MockTCV::write(tcv_dev_addr_t device, std::uint8_t regaddr,
 
 	switch(device){
 		case a0:
+
 			std::copy(data, data+size, eeprom.begin()+regaddr);
+
 		break;
 		case dd: /* no write to DD */
 		default:

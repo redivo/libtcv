@@ -10,7 +10,7 @@
 # -DBUILD_DEMO=On
 # -DBUILD_TEST=OFF
 # -DPROFILE=Off
-# -DCOVERAGE=Off
+# -DTEST_COVERAGE=Off
 #
 # To choose different compiler: (target)
 # cmake  -DCMAKE_C_COMPILER=ppc_6xx-gcc
@@ -30,7 +30,7 @@ cmake_minimum_required (VERSION 2.8)
 # Project Name
 project (libtcv)
 # Make will run in verbose mode - for debugging makefiles
-SET(CMAKE_VERBOSE_MAKEFILE OFF)
+# SET(CMAKE_VERBOSE_MAKEFILE On)
 # Enable ExternalProject CMake module
 include(ExternalProject)
 
@@ -135,6 +135,8 @@ if(BUILD_TEST)
 	# -Dgtest_force_shared_crt=ON
 	# Disable install step
 	INSTALL_COMMAND ""
+	# Empty update command to speed up make - we don't need to constantly check
+	UPDATE_COMMAND ""
  	)
 endif(BUILD_TEST)
 ################################################################################
@@ -152,13 +154,15 @@ SET(CMAKE_C_FLAGS_RELEASE  " ${CMAKE_C_FLAGS_RELEASE} -ffunction-sections -fdata
 SET(CMAKE_EXE_LINKER_FLAGS_RELEASE " ${CMAKE_EXE_LINKER_FLAGS_RELEASE} -Wl,--gc-sections -Wl,-Map,${PROJECT_NAME}.map ")
 
 if(TEST_COVERAGE)
+    SET(CMAKE_C_FLAGS     " ${CMAKE_C_FLAGS} -g -fprofile-arcs -ftest-coverage ")
     SET(CMAKE_CXX_FLAGS   " ${CMAKE_CXX_FLAGS} -g -fprofile-arcs -ftest-coverage ")
     SET(CMAKE_LINK_FLAGS  " ${CMAKE_LINK_FLAGS} -O0 -g ")
 endif()
 
 if(PROFILE)
-    SET(CMAKE_CXX_FLAGS   " ${CMAKE_CXX_FLAGS} -g -pg ")
-    SET(CMAKE_LINK_FLAGS  " ${CMAKE_LINK_FLAGS} -O2 -g -pg ")
+    SET(CMAKE_C_FLAGS      " ${CMAKE_C_FLAGS} -g  -pg ")
+    SET(CMAKE_CXX_FLAGS    " ${CMAKE_CXX_FLAGS} -g -pg ")
+    SET(CMAKE_LINK_FLAGS   " ${CMAKE_LINK_FLAGS} -O2 -g -pg ")
 endif()
 
 ################################################################################
@@ -205,6 +209,10 @@ if(BUILD_TEST)
 
     # Add Test-Framework and main() to execute test
     TARGET_LINK_LIBRARIES(${TEST_BINARY_NAME} ${RUN_TEST_MAIN} ${UNIT_TEST_LIB} ${THREAD_LIB})
+
+    if(TEST_COVERAGE)
+        TARGET_LINK_LIBRARIES(${TEST_BINARY_NAME}  ${COVERAGE_LIB})
+    endif()
 
     # Call the testBinary with junit-xml output
     add_test(junitout "./${TEST_BIN_DIR}/${TEST_BINARY_NAME}"

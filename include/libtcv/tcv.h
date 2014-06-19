@@ -8,6 +8,7 @@
 #define __LIBTCV_TCV_H__
 
 #include <stdint.h>
+#include <stddef.h>
 
 /******************************************************************************/
 /* Transceiver identifier types */
@@ -46,22 +47,22 @@
  * \param	index	Port index to be read.
  * \param	devaddr	Device address to be read.
  * \param	regaddr	First register address to be read.
- * \param	data	Pointer to be stored the read data.
+ * \param	data	(out) register content read
  * \param	size	Size in bytes to be read.
  * \return	0 if ok, error code otherwise.
  */
-typedef int (*i2c_read_cb_t)(int, uint8_t, uint8_t, uint8_t*, uint8_t);
+typedef int (*i2c_read_cb_t)(int, uint8_t, uint8_t, uint8_t*, size_t);
 
 /**
  * \brief	I2C write callback.
  * \param	index	Port index to be written.
  * \param	devaddr	Device address to be written.
  * \param	regaddr	First register address to be written.
- * \param	data	Pointer to be wrote in register.
+ * \param	data	(in) data to write
  * \param	size	Size in bytes to be written.
  * \return	0 if ok, error code otherwise.
  */
-typedef int (*i2c_write_cb_t)(int, uint8_t, uint8_t, uint8_t*, uint8_t);
+typedef int (*i2c_write_cb_t)(int, uint8_t, uint8_t, const uint8_t*, size_t);
 
 
 /**
@@ -80,7 +81,7 @@ typedef struct {
 	i2c_read_cb_t read;		//! Callback to I2C read function.
 	i2c_write_cb_t write;	//! Callback to I2C write function.
 	void *data;				//! TCV internal data. It includes all internal devices.
-	struct tcv_functions * fun; //! Transceiver methods
+	const struct tcv_functions * fun; //! Transceiver methods
 } tcv_t;
 
 /******************************************************************************/
