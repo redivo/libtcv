@@ -4,6 +4,7 @@
  * It's an MSA translation.
  */
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
@@ -153,7 +154,12 @@
 
 /******************************************************************************/
 
-int sfp_get_itendifier(tcv_t *tcv)
+/* [CR] tipos diferentes. O retorno é uint8_t mas o tipo da função é int.
+ * sugestões:
+ *   - passar a função para uint8_t e avaliar não testar os ponteiros.
+ *   - passar o dado como parâmetro e não através do retorno.
+ */
+int sfp_get_identifier(const tcv_t *tcv)
 {
 	if (tcv == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
@@ -163,7 +169,12 @@ int sfp_get_itendifier(tcv_t *tcv)
 
 /******************************************************************************/
 
-int sfp_get_ext_itendifier(tcv_t *tcv)
+/* [CR] tipos diferentes. O retorno é uint8_t mas o tipo da função é int.
+ * sugestões:
+ *   - passar a função para uint8_t e avaliar não testar os ponteiros.
+ *   - passar o dado como parâmetro e não através do retorno.
+ */
+int sfp_get_ext_identifier(const tcv_t *tcv)
 {
 	if (tcv == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
@@ -173,7 +184,12 @@ int sfp_get_ext_itendifier(tcv_t *tcv)
 
 /******************************************************************************/
 
-int sfp_get_connector(tcv_t *tcv)
+/* [CR] tipos diferentes. O retorno é uint8_t mas o tipo da função é int.
+ * sugestões:
+ *   - passar a função para uint8_t e avaliar não testar os ponteiros.
+ *   - passar o dado como parâmetro e não através do retorno.
+ */
+int sfp_get_connector(const tcv_t *tcv)
 {
 	if (tcv == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
@@ -195,19 +211,19 @@ int sfp_get_connector(tcv_t *tcv)
  +------+-----+--------------+
 */
 
-#define SFP_10G_ETH_COMPLIANCE_REG	BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 0
+#define SFP_10G_ETH_COMPLIANCE_REG	(BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 0)
 #define SFP_10G_ETH_COMPLIANCE_MASK	0xF0
 
-int sfp_get_10g_compliance_codes(tcv_t *tcv, tcv_10g_eth_compliance_codes_t *codes)
+/* [CR] tipos diferentes. O retorno é uint8_t mas o tipo da função é int.
+ * sugestões:
+ *   - passar a função para uint8_t e avaliar não testar os ponteiros.
+ *   - passar o dado como parâmetro e não através do retorno.
+ */
+int sfp_get_10g_compliance_codes(const tcv_t *tcv, tcv_10g_eth_compliance_codes_t *codes)
 {
 	if (tcv == NULL || codes == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
 
-	/* Clear bitmap */
-	codes->bmp = 0;
-
-	/* Fill bitmap */
-	codes->bmp = 0;
 	codes->bmp = (((sfp_data_t*)tcv->data)->a0[SFP_10G_ETH_COMPLIANCE_REG] & SFP_10G_ETH_COMPLIANCE_MASK) >> 4;
 
 	return 0;
@@ -226,16 +242,18 @@ int sfp_get_10g_compliance_codes(tcv_t *tcv, tcv_10g_eth_compliance_codes_t *cod
  +------+-----+-------------------+
 */
 
-#define INFINIBAND_COMPLIANCE_REG	BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 0
+#define INFINIBAND_COMPLIANCE_REG	(BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 0)
 #define INFINIBAND_MASK 0x0F
 
-int sfp_get_infiniband_compliance_codes(tcv_t *tcv, tcv_infiniband_compliance_codes_t *codes)
+/* [CR] tipos diferentes. O retorno é uint8_t mas o tipo da função é int.
+ * sugestões:
+ *   - passar a função para uint8_t e avaliar não testar os ponteiros.
+ *   - passar o dado como parâmetro e não através do retorno.
+ */
+int sfp_get_infiniband_compliance_codes(const tcv_t *tcv, tcv_infiniband_compliance_codes_t *codes)
 {
 	if (tcv == NULL || codes == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
-
-	/* Clear bitmap */
-	codes->bmp = 0;
 
 	codes->bmp = ((sfp_data_t*)tcv->data)->a0[INFINIBAND_COMPLIANCE_REG] & INFINIBAND_MASK;
 
@@ -253,16 +271,18 @@ int sfp_get_infiniband_compliance_codes(tcv_t *tcv, tcv_infiniband_compliance_co
  +------+-----+-------------------------+
 */
 
-#define ESCON_COMPLIANCE_REG	BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 1
+#define ESCON_COMPLIANCE_REG	(BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 1)
 #define ESCON_MASK 				0xC0
 
-int sfp_get_escon_compliance_codes(tcv_t *tcv, tcv_escon_compliance_codes_t *codes)
+/* [CR] tipos diferentes. O retorno é uint8_t mas o tipo da função é int.
+ * sugestões:
+ *   - passar a função para uint8_t e avaliar não testar os ponteiros.
+ *   - passar o dado como parâmetro e não através do retorno.
+ */
+int sfp_get_escon_compliance_codes(const tcv_t *tcv, tcv_escon_compliance_codes_t *codes)
 {
 	if (tcv == NULL || codes == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
-
-	/* Clear bitmap */
-	codes->bmp = 0;
 
 	codes->bmp = (((sfp_data_t*)tcv->data)->a0[ESCON_COMPLIANCE_REG] & ESCON_MASK) >> 6;
 
@@ -303,10 +323,10 @@ int sfp_get_escon_compliance_codes(tcv_t *tcv, tcv_escon_compliance_codes_t *cod
 #define SONET_OC3_SM_IR		(1 << 1)
 #define SONET_OC3_SR		(1 << 0)
 
-#define SONET_COMPLIANCE_REG_1	BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 1
-#define SONET_COMPLIANCE_REG_2	BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 2
+#define SONET_COMPLIANCE_REG_1	(BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 1)
+#define SONET_COMPLIANCE_REG_2	(BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 2)
 
-int sfp_get_sonet_compliance_codes(tcv_t *tcv, tcv_sonet_compliance_codes_t *codes)
+int sfp_get_sonet_compliance_codes(const tcv_t *tcv, tcv_sonet_compliance_codes_t *codes)
 {
 	if (tcv == NULL || codes == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
@@ -314,16 +334,16 @@ int sfp_get_sonet_compliance_codes(tcv_t *tcv, tcv_sonet_compliance_codes_t *cod
 	/* Clear bitmap */
 	codes->bmp = 0;
 
-	codes->bits.oc_192_sr = !! (((sfp_data_t*)tcv->data)->a0[SONET_COMPLIANCE_REG_1] & SONET_OC192_SR);
-	codes->bits.oc_48_lr = !! (((sfp_data_t*)tcv->data)->a0[SONET_COMPLIANCE_REG_1] & SONET_OC48_LR);
-	codes->bits.oc_48_ir = !! (((sfp_data_t*)tcv->data)->a0[SONET_COMPLIANCE_REG_1] & SONET_OC48_IR);
-	codes->bits.oc_48_sr = !! (((sfp_data_t*)tcv->data)->a0[SONET_COMPLIANCE_REG_1] & SONET_OC48_SR);
+	codes->bits.oc_192_sr   = !! (((sfp_data_t*)tcv->data)->a0[SONET_COMPLIANCE_REG_1] & SONET_OC192_SR);
+	codes->bits.oc_48_lr    = !! (((sfp_data_t*)tcv->data)->a0[SONET_COMPLIANCE_REG_1] & SONET_OC48_LR);
+	codes->bits.oc_48_ir    = !! (((sfp_data_t*)tcv->data)->a0[SONET_COMPLIANCE_REG_1] & SONET_OC48_IR);
+	codes->bits.oc_48_sr    = !! (((sfp_data_t*)tcv->data)->a0[SONET_COMPLIANCE_REG_1] & SONET_OC48_SR);
 	codes->bits.oc_12_sm_lr = !! (((sfp_data_t*)tcv->data)->a0[SONET_COMPLIANCE_REG_2] & SONET_OC12_SM_LR);
 	codes->bits.oc_12_sm_ir = !! (((sfp_data_t*)tcv->data)->a0[SONET_COMPLIANCE_REG_2] & SONET_OC12_SM_IR);
-	codes->bits.oc_12_sr = !! (((sfp_data_t*)tcv->data)->a0[SONET_COMPLIANCE_REG_2] & SONET_OC12_SR);
-	codes->bits.oc_3_sm_lr = !! (((sfp_data_t*)tcv->data)->a0[SONET_COMPLIANCE_REG_2] & SONET_OC3_SM_LR);
-	codes->bits.oc_3_sm_ir = !! (((sfp_data_t*)tcv->data)->a0[SONET_COMPLIANCE_REG_2] & SONET_OC3_SM_IR);
-	codes->bits.oc_3_sr = !! (((sfp_data_t*)tcv->data)->a0[SONET_COMPLIANCE_REG_2] & SONET_OC3_SR);
+	codes->bits.oc_12_sr    = !! (((sfp_data_t*)tcv->data)->a0[SONET_COMPLIANCE_REG_2] & SONET_OC12_SR);
+	codes->bits.oc_3_sm_lr  = !! (((sfp_data_t*)tcv->data)->a0[SONET_COMPLIANCE_REG_2] & SONET_OC3_SM_LR);
+	codes->bits.oc_3_sm_ir  = !! (((sfp_data_t*)tcv->data)->a0[SONET_COMPLIANCE_REG_2] & SONET_OC3_SM_IR);
+	codes->bits.oc_3_sr     = !! (((sfp_data_t*)tcv->data)->a0[SONET_COMPLIANCE_REG_2] & SONET_OC3_SR);
 
 	return 0;
 }
@@ -347,7 +367,7 @@ int sfp_get_sonet_compliance_codes(tcv_t *tcv, tcv_sonet_compliance_codes_t *cod
 #define SONET_REACH_SPECIFIER_1	(1 << 4)
 #define SONET_REACH_SPECIFIER_2	(1 << 3)
 
-int sfp_get_sonet_compliances(tcv_t *tcv, tcv_sonet_compliances_t *compliances)
+int sfp_get_sonet_compliances(const tcv_t *tcv, tcv_sonet_compliances_t *compliances)
 {
 	tcv_sonet_compliance_codes_t codes;
 	bool spec_bit_1, spec_bit_2;
@@ -414,9 +434,9 @@ int sfp_get_sonet_compliances(tcv_t *tcv, tcv_sonet_compliances_t *compliances)
  +------+-----+-----------------+
 */
 
-#define ETH_COMPLIANCE_REG_1	BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 3
+#define ETH_COMPLIANCE_REG_1	(BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 3)
 
-int sfp_get_eth_compliance_codes(tcv_t *tcv, tcv_eth_compliance_codes_t *codes)
+int sfp_get_eth_compliance_codes(const tcv_t *tcv, tcv_eth_compliance_codes_t *codes)
 {
 	if (tcv == NULL || codes == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
@@ -441,16 +461,13 @@ int sfp_get_eth_compliance_codes(tcv_t *tcv, tcv_eth_compliance_codes_t *codes)
  +------+-----+------------------------+
 */
 
-#define LINK_LENGTH_REG		BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 4
+#define LINK_LENGTH_REG		(BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 4)
 #define LINK_LENGTH_MASK	0xF8
 
-int sfp_get_fibre_channel_link_length(tcv_t *tcv, tcv_fibre_channel_link_length_t *lengths)
+int sfp_get_fibre_channel_link_length(const tcv_t *tcv, tcv_fibre_channel_link_length_t *lengths)
 {
 	if (tcv == NULL || lengths == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
-
-	/* Clear bitmap */
-	lengths->bmp = 0;
 
 	/* Fill bitmap */
 	lengths->bmp = (((sfp_data_t*)tcv->data)->a0[LINK_LENGTH_REG] & LINK_LENGTH_MASK) >> 3;
@@ -474,12 +491,12 @@ int sfp_get_fibre_channel_link_length(tcv_t *tcv, tcv_fibre_channel_link_length_
  +------+-----+---------------------------------+
 */
 
-#define FIBRE_CHANNEL_TECH_REG_1	BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 4
+#define FIBRE_CHANNEL_TECH_REG_1	(BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 4)
 #define FIBRE_CHANNEL_TECH_MASK_1	0x07
-#define FIBRE_CHANNEL_TECH_REG_2	BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 5
+#define FIBRE_CHANNEL_TECH_REG_2	(BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 5)
 #define FIBRE_CHANNEL_TECH_MASK_2	0xF0
 
-int sfp_get_fibre_channel_technology(tcv_t *tcv, tcv_fibre_channel_technology_t *technology)
+int sfp_get_fibre_channel_technology(const tcv_t *tcv, tcv_fibre_channel_technology_t *technology)
 {
 	if (tcv == NULL || technology == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
@@ -505,10 +522,10 @@ int sfp_get_fibre_channel_technology(tcv_t *tcv, tcv_fibre_channel_technology_t 
  +------+-----+---------------+
 */
 
-#define SFP_PLUS_TECH_REG	BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 5
+#define SFP_PLUS_TECH_REG	(BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 5)
 #define SFP_PLUS_TECH_MASK	0x0C
 
-int sfp_get_sfp_plus_cable_technology(tcv_t *tcv, sfp_plus_cable_technology_t *technology)
+int sfp_get_sfp_plus_cable_technology(const tcv_t *tcv, sfp_plus_cable_technology_t *technology)
 {
 	if (tcv == NULL || technology == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
@@ -538,11 +555,11 @@ int sfp_get_sfp_plus_cable_technology(tcv_t *tcv, sfp_plus_cable_technology_t *t
  +------+-----+--------------------------+
 */
 
-#define MEDIA_REG		BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 6
+#define MEDIA_REG		(BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 6)
 #define MEDIA_MASK_1	0xFC
 #define MEDIA_MASK_2	0x01
 
-int sfp_get_fibre_channel_media(tcv_t *tcv, tcv_fibre_channel_media_t *media)
+int sfp_get_fibre_channel_media(const tcv_t *tcv, tcv_fibre_channel_media_t *media)
 {
 	if (tcv == NULL || media == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
@@ -551,6 +568,7 @@ int sfp_get_fibre_channel_media(tcv_t *tcv, tcv_fibre_channel_media_t *media)
 	media->bmp = 0;
 
 	/* Fill bitmap */
+	/* [CR] qual a ideia de disponibilizar o dado em outro padrão? */
 	media->bmp |= (((sfp_data_t*)tcv->data)->a0[MEDIA_REG] & MEDIA_MASK_1) >> 1;
 	media->bmp |= ((sfp_data_t*)tcv->data)->a0[MEDIA_REG] & MEDIA_MASK_2;
 	return 0;
@@ -572,11 +590,11 @@ int sfp_get_fibre_channel_media(tcv_t *tcv, tcv_fibre_channel_media_t *media)
  +------+-----+-------------+
 */
 
-#define FIBRE_CHANNEL_SPEED_REG		BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 7
+#define FIBRE_CHANNEL_SPEED_REG		(BASIC_INFO_REG_ELETRONIC_COMPATIBILITIE_1 + 7)
 #define FIBRE_CHANNEL_SPEED_MASK_1	0xFC
 #define FIBRE_CHANNEL_SPEED_MASK_2	0x01
 
-int sfp_get_fibre_channel_speed(tcv_t *tcv, fibre_channel_speed_t *speed)
+int sfp_get_fibre_channel_speed(const tcv_t *tcv, fibre_channel_speed_t *speed)
 {
 	if (tcv == NULL || speed == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
@@ -585,6 +603,7 @@ int sfp_get_fibre_channel_speed(tcv_t *tcv, fibre_channel_speed_t *speed)
 	speed->bmp = 0;
 
 	/* Fill bitmap */
+	/* [CR] qual a ideia de disponibilizar o dado em outro padrão? */
 	speed->bmp |= (((sfp_data_t*)tcv->data)->a0[MEDIA_REG] & MEDIA_MASK_1) >> 1;
 	speed->bmp |= ((sfp_data_t*)tcv->data)->a0[MEDIA_REG] & MEDIA_MASK_2;
 
@@ -593,7 +612,7 @@ int sfp_get_fibre_channel_speed(tcv_t *tcv, fibre_channel_speed_t *speed)
 
 /******************************************************************************/
 
-int sfp_get_encoding(tcv_t *tcv)
+int sfp_get_encoding(const tcv_t *tcv)
 {
 	if (tcv == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
@@ -603,7 +622,7 @@ int sfp_get_encoding(tcv_t *tcv)
 
 /******************************************************************************/
 
-int sfp_get_nominal_bit_rate(tcv_t *tcv)
+int sfp_get_nominal_bit_rate(const tcv_t *tcv)
 {
 	if (tcv == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
@@ -618,7 +637,7 @@ int sfp_get_nominal_bit_rate(tcv_t *tcv)
 
 /******************************************************************************/
 
-int sfp_get_rate_identifier(tcv_t *tcv)
+int sfp_get_rate_identifier(const tcv_t *tcv)
 {
 	if (tcv == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
@@ -628,7 +647,7 @@ int sfp_get_rate_identifier(tcv_t *tcv)
 
 /******************************************************************************/
 
-int sfp_get_sm_length(tcv_t *tcv)
+int sfp_get_sm_length(const tcv_t *tcv)
 {
 	unsigned char length;
 
@@ -648,7 +667,7 @@ int sfp_get_sm_length(tcv_t *tcv)
 
 /******************************************************************************/
 
-int sfp_get_om2_length(tcv_t *tcv)
+int sfp_get_om2_length(const tcv_t *tcv)
 {
 	unsigned char length;
 
@@ -663,7 +682,7 @@ int sfp_get_om2_length(tcv_t *tcv)
 
 /******************************************************************************/
 
-int sfp_get_om1_length(tcv_t *tcv)
+int sfp_get_om1_length(const tcv_t *tcv)
 {
 	unsigned char length;
 
@@ -677,7 +696,7 @@ int sfp_get_om1_length(tcv_t *tcv)
 }
 
 /******************************************************************************/
-static bool sfp_is_optical(tcv_t *tcv)
+static bool sfp_is_optical(const tcv_t *tcv)
 {
 	// TODO
 	if (tcv)
@@ -686,7 +705,7 @@ static bool sfp_is_optical(tcv_t *tcv)
 	return 1;
 }
 
-int sfp_get_om4_length_copper_length(tcv_t *tcv)
+int sfp_get_om4_length_copper_length(const tcv_t *tcv)
 {
 	unsigned char length;
 
@@ -705,7 +724,7 @@ int sfp_get_om4_length_copper_length(tcv_t *tcv)
 
 /******************************************************************************/
 
-int sfp_get_om3_length(tcv_t *tcv)
+int sfp_get_om3_length(const tcv_t *tcv)
 {
 	unsigned char length;
 
@@ -720,22 +739,26 @@ int sfp_get_om3_length(tcv_t *tcv)
 
 /******************************************************************************/
 
-int sfp_get_vendor_name(tcv_t *tcv, char vendor_name[BASIC_INFO_REG_VENDOR_NAME_SIZE + 1])
+int sfp_get_vendor_name(const tcv_t *tcv, char vendor_name[BASIC_INFO_REG_VENDOR_NAME_SIZE + 1])
 {
+	const void *sfp_vendor_name;
+
 	if (tcv == NULL || vendor_name == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
 
+	sfp_vendor_name = &((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_VENDOR_NAME];
+
+	memcpy(vendor_name, sfp_vendor_name, sizeof(vendor_name) - 1);
+
 	/* Indicates end of string */
 	vendor_name[BASIC_INFO_REG_VENDOR_NAME_SIZE] = '\0';
-
-	memcpy(vendor_name, &((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_VENDOR_NAME], BASIC_INFO_REG_VENDOR_NAME_SIZE);
 
 	return 0;
 }
 
 /******************************************************************************/
 
-int sfp_get_vendor_oui(tcv_t *tcv)
+int sfp_get_vendor_oui(const tcv_t *tcv)
 {
 	int oui = 0;
 	int i;
@@ -744,6 +767,7 @@ int sfp_get_vendor_oui(tcv_t *tcv)
 		return TCV_ERR_INVALID_ARG;
 
 	/* Concatenate the 3 bytes in just one variable */
+	/* [CR] haverá problema com endianes. Requisito "plataform-independent não antendido. */
 	for (i = 0; i < BASIC_INFO_REG_VENDOR_OUI_SIZE_SIZE; i++)
 		oui |= ((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_VENDOR_OUI + i] << (8 * i);
 
@@ -752,37 +776,44 @@ int sfp_get_vendor_oui(tcv_t *tcv)
 
 /******************************************************************************/
 
-int sfp_get_vendor_part_number(tcv_t *tcv, char pn[BASIC_INFO_REG_VENDOR_PN_SIZE + 1])
+int sfp_get_vendor_part_number(const tcv_t *tcv, char pn[BASIC_INFO_REG_VENDOR_PN_SIZE + 1])
 {
+	const void *sfp_pn;
+
 	if (tcv == NULL || pn == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
+
+	sfp_pn = &((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_VENDOR_PN];
+	memcpy(pn, sfp_pn, sizeof(pn) - 1);
 
 	/* Indicates end of string */
 	pn[BASIC_INFO_REG_VENDOR_PN_SIZE] = '\0';
 
-	memcpy(pn, &((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_VENDOR_PN], BASIC_INFO_REG_VENDOR_PN_SIZE);
-
 	return 0;
 }
 
 /******************************************************************************/
 
-int sfp_get_vendor_revision(tcv_t *tcv, char rev[BASIC_INFO_REG_VENDOR_REV_SIZE + 1])
+int sfp_get_vendor_revision(const tcv_t *tcv, char rev[BASIC_INFO_REG_VENDOR_REV_SIZE + 1])
 {
+	const void *sfp_vendor_rev;
+
 	if (tcv == NULL || rev == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
+
+	sfp_vendor_rev = &((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_VENDOR_REV];
+
+	memcpy(rev, sfp_vendor_rev, sizeof(rev) - 1);
 
 	/* Indicates end of string */
 	rev[BASIC_INFO_REG_VENDOR_REV_SIZE] = '\0';
 
-	memcpy(rev, &((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_VENDOR_REV], BASIC_INFO_REG_VENDOR_REV_SIZE);
-
 	return 0;
 }
 
 /******************************************************************************/
 
-int sfp_get_wavelength(tcv_t *tcv)
+int sfp_get_wavelength(const tcv_t *tcv)
 {
 	unsigned int length = 0;
 	int ret;
@@ -801,6 +832,7 @@ int sfp_get_wavelength(tcv_t *tcv)
 
 	/* The first address is the high part of the 16 bit wavelength and the next
 	 * address is the low part */
+	/* FIXME problema com endianes. */
 	length |= ((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_WAVELENGTH] << 8;
 	length |= ((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_WAVELENGTH + 1];
 
@@ -824,7 +856,7 @@ int sfp_get_wavelength(tcv_t *tcv)
 #define FC_PI_4_APENDIX_H_COMPLIANT		(1 << 1)
 #define SFF_8431_APENDIX_E_COMPLIANT	(1 << 0)
 
-int sfp_get_passive_cable_compliance(tcv_t *tcv, passive_cable_compliance_t *compliance)
+int sfp_get_passive_cable_compliance(const tcv_t *tcv, passive_cable_compliance_t *compliance)
 {
 	int ret;
 	sfp_plus_cable_technology_t tech;
@@ -870,7 +902,7 @@ int sfp_get_passive_cable_compliance(tcv_t *tcv, passive_cable_compliance_t *com
 #define FC_PI_4_LIMITING_COMPLIANT	(1 << 3)
 #define SFF_8431_LIMITING_COMPLIANT	(1 << 2)
 
-int sfp_get_active_cable_compliance(tcv_t *tcv, active_cable_compliance_t *compliance)
+int sfp_get_active_cable_compliance(const tcv_t *tcv, active_cable_compliance_t *compliance)
 {
 	int ret;
 	sfp_plus_cable_technology_t tech;
@@ -906,7 +938,7 @@ int sfp_get_active_cable_compliance(tcv_t *tcv, active_cable_compliance_t *compl
 
 /******************************************************************************/
 
-int sfp_get_cc_base(tcv_t *tcv)
+int sfp_get_cc_base(const tcv_t *tcv)
 {
 	if (tcv == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
@@ -919,7 +951,7 @@ int sfp_get_cc_base(tcv_t *tcv)
 #define FIRST_CC_BASE_ADDR	0x00
 #define LAST_CC_BASE_ADDR	0x3E
 
-int sfp_calculate_cc_base(tcv_t *tcv)
+int sfp_calculate_cc_base(const tcv_t *tcv)
 {
 	int i;
 	int sum = 0;
@@ -965,7 +997,7 @@ int sfp_calculate_cc_base(tcv_t *tcv)
 #define OPTION_SIG_DETECT		(1 << 2) /* BASIC_INFO_REG_OPTIONS + 1 */
 #define OPTION_LOS				(1 << 1) /* BASIC_INFO_REG_OPTIONS + 1 */
 
-int sfp_get_implemented_options(tcv_t *tcv, tcv_implemented_options_t *options)
+int sfp_get_implemented_options(const tcv_t *tcv, tcv_implemented_options_t *options)
 {
 	if (tcv == NULL || options == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
@@ -975,22 +1007,23 @@ int sfp_get_implemented_options(tcv_t *tcv, tcv_implemented_options_t *options)
 
 	/* Information stored in BASIC_INFO_REG_OPTIONS */
 	options->bits.cooled_laser_transmitted = ((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_OPTIONS];
-	options->bits.power_lever_2 = ((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_OPTIONS];
-	options->bits.linear_receiver_out = ((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_OPTIONS];
+	options->bits.power_lever_2            = ((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_OPTIONS];
+	options->bits.linear_receiver_out      = ((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_OPTIONS];
 
 	/* Information stored in BASIC_INFO_REG_OPTIONS + 1 */
-	options->bits.rate_select = ((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_OPTIONS + 1];
-	options->bits.tx_disable = ((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_OPTIONS + 1];
-	options->bits.tx_fault = ((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_OPTIONS + 1];
+	/* FIXME faltando o normalização para bool e o mascaramento */
+	options->bits.rate_select   = ((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_OPTIONS + 1];
+	options->bits.tx_disable    = ((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_OPTIONS + 1];
+	options->bits.tx_fault      = ((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_OPTIONS + 1];
 	options->bits.signal_detect = ((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_OPTIONS + 1];
-	options->bits.los = ((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_OPTIONS + 1];
+	options->bits.los           = ((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_OPTIONS + 1];
 
 	return 0;
 }
 
 /******************************************************************************/
 
-int sfp_get_max_bit_rate(tcv_t *tcv)
+int sfp_get_max_bit_rate(const tcv_t *tcv)
 {
 	if (tcv == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
@@ -1006,7 +1039,7 @@ int sfp_get_max_bit_rate(tcv_t *tcv)
 
 /******************************************************************************/
 
-int sfp_get_min_bit_rate(tcv_t *tcv)
+int sfp_get_min_bit_rate(const tcv_t *tcv)
 {
 	if (tcv == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
@@ -1016,7 +1049,7 @@ int sfp_get_min_bit_rate(tcv_t *tcv)
 
 /******************************************************************************/
 
-int sfp_get_vendor_sn(tcv_t *tcv, char vendor_sn[TCV_VENDOR_SN_SIZE + 1])
+int sfp_get_vendor_sn(const tcv_t *tcv, char vendor_sn[TCV_VENDOR_SN_SIZE + 1])
 {
 	if (tcv == NULL || vendor_sn == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
@@ -1042,16 +1075,16 @@ int sfp_get_vendor_sn(tcv_t *tcv, char vendor_sn[TCV_VENDOR_SN_SIZE + 1])
  +-------------+------------------------------------------------------+
 */
 
-#define DATE_CODE_YEAR_1	BASIC_INFO_REG_VENDOR_DATE_CODE + 0
-#define DATE_CODE_YEAR_2	BASIC_INFO_REG_VENDOR_DATE_CODE + 1
-#define DATE_CODE_MONTH_1	BASIC_INFO_REG_VENDOR_DATE_CODE + 2
-#define DATE_CODE_MONTH_2	BASIC_INFO_REG_VENDOR_DATE_CODE + 3
-#define DATE_CODE_DAY_1		BASIC_INFO_REG_VENDOR_DATE_CODE + 4
-#define DATE_CODE_DAY_2		BASIC_INFO_REG_VENDOR_DATE_CODE + 5
-#define DATE_CODE_LOT		BASIC_INFO_REG_VENDOR_DATE_CODE + 6
+#define DATE_CODE_YEAR_1	(BASIC_INFO_REG_VENDOR_DATE_CODE + 0)
+#define DATE_CODE_YEAR_2	(BASIC_INFO_REG_VENDOR_DATE_CODE + 1)
+#define DATE_CODE_MONTH_1	(BASIC_INFO_REG_VENDOR_DATE_CODE + 2)
+#define DATE_CODE_MONTH_2	(BASIC_INFO_REG_VENDOR_DATE_CODE + 3)
+#define DATE_CODE_DAY_1		(BASIC_INFO_REG_VENDOR_DATE_CODE + 4)
+#define DATE_CODE_DAY_2		(BASIC_INFO_REG_VENDOR_DATE_CODE + 5)
+#define DATE_CODE_LOT		(BASIC_INFO_REG_VENDOR_DATE_CODE + 6)
 #define DATE_CODE_LOT_SIZE	2
 
-int sfp_get_vendor_date_code(tcv_t *tcv, tcv_date_code_t *date_code)
+int sfp_get_vendor_date_code(const tcv_t *tcv, tcv_date_code_t *date_code)
 {
 	char tmp[3];
 
@@ -1100,7 +1133,7 @@ int sfp_get_vendor_date_code(tcv_t *tcv, tcv_date_code_t *date_code)
 
 #define DIAG_TYPE_MASK 0x7C
 
-int sfp_get_diagnostic_type(tcv_t *tcv, tcv_diagnostic_type_t *diag_type)
+int sfp_get_diagnostic_type(const tcv_t *tcv, tcv_diagnostic_type_t *diag_type)
 {
 	if (tcv == NULL || diag_type == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
@@ -1129,7 +1162,7 @@ int sfp_get_diagnostic_type(tcv_t *tcv, tcv_diagnostic_type_t *diag_type)
 
 #define ENHANCED_OPTIONS_MASK 0xFE
 
-int sfp_get_enhance_options(tcv_t *tcv, tcv_enhanced_options_type_t *options)
+int sfp_get_enhance_options(const tcv_t *tcv, tcv_enhanced_options_type_t *options)
 {
 	if (tcv == NULL || options == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
@@ -1141,7 +1174,7 @@ int sfp_get_enhance_options(tcv_t *tcv, tcv_enhanced_options_type_t *options)
 
 /******************************************************************************/
 
-int sfp_get_cc_ext(tcv_t *tcv)
+int sfp_get_cc_ext(const tcv_t *tcv)
 {
 	if (tcv == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
@@ -1154,7 +1187,7 @@ int sfp_get_cc_ext(tcv_t *tcv)
 #define FIRST_CC_EXT_ADDR	0x40
 #define LAST_CC_EXT_ADDR	0x5E
 
-int sfp_calculate_cc_ext(tcv_t *tcv)
+int sfp_calculate_cc_ext(const tcv_t *tcv)
 {
 	int i;
 	int sum = 0;
@@ -1174,7 +1207,7 @@ int sfp_calculate_cc_ext(tcv_t *tcv)
 /******************************************************************************/
 
 /**
- * Member functions for sfp modules
+ * Member functions for SFP modules
  */
 const struct tcv_functions sfp_funcs = {
 	.get_itendifier = sfp_get_itendifier,

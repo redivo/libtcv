@@ -3,7 +3,7 @@ libtcv
 
 Library Transceiver
 -------------------
-This library provide an application-independent API to get/set information from/to a transceiver compliant with the SFF Committee specifications.
+This library provides an application-independent API to get/set information from/to a transceiver compliant with the SFF Committee specifications.
 
 
 More Info
@@ -50,6 +50,8 @@ The *libtcv* is developed in C.
  - Implement XFP serial ID data (devAddr 0xA0, page 1) set functions;
  - Implement XFP user EPROM data (devAddr 0xA0, page 2) get functions;
  - Implement XFP user EPROM data (devAddr 0xA0, page 2) set functions;
- - Implement UT.
- - Implement XFP simulator;
- - Implement SFP simulator.
+ - Implement UT;
+ - Implement XFP emulation;
+ - Implement optical SFP emulation;
+ - Implement electrical SFP emulation;
+ - Implement SFP+ emulation.

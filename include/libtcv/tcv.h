@@ -77,11 +77,11 @@ struct tcv_functions;
  * It's a generic transceiver representation, it's valid for both SFP and XFP.
  */
 typedef struct {
-	int index;				//! Port index referent to TCV port.
-	i2c_read_cb_t read;		//! Callback to I2C read function.
-	i2c_write_cb_t write;	//! Callback to I2C write function.
-	void *data;				//! TCV internal data. It includes all internal devices.
-	const struct tcv_functions * fun; //! Transceiver methods
+	int index;				/*!< Port index referent to TCV port. */
+	i2c_read_cb_t read;		/*!< Callback to I2C read function. */
+	i2c_write_cb_t write;	/*!< Callback to I2C write function. */
+	void *data;				/*!< TCV internal data. It includes all internal devices. */
+	const struct tcv_functions *fun; /*!< Transceiver methods */
 } tcv_t;
 
 /******************************************************************************/
@@ -94,7 +94,7 @@ typedef struct {
  * \param	write	I2C write function callback.
  * \return	0 if ok, error code otherwise.
  */
-int tcv_init(tcv_t *tcv, int index, i2c_read_cb_t read, i2c_write_cb_t write);
+int tcv_init(const tcv_t *tcv, int index, i2c_read_cb_t read, i2c_write_cb_t write);
 
 /******************************************************************************/
 /**
@@ -102,7 +102,7 @@ int tcv_init(tcv_t *tcv, int index, i2c_read_cb_t read, i2c_write_cb_t write);
  * \param	tcv	Pointer to transceiver structure
  * \return	Transceiver type if ok; code error otherwise
  */
-int tcv_get_identifier(tcv_t *tcv);
+int tcv_get_identifier(const tcv_t *tcv);
 
 /******************************************************************************/
 
@@ -121,7 +121,7 @@ int tcv_get_identifier(tcv_t *tcv);
  * \param	tcv	Pointer to transceiver structure
  * \return	Extended transceiver type if ok; code error otherwise
  */
-int tcv_get_ext_itendifier(tcv_t *tcv);
+int tcv_get_ext_itendifier(const tcv_t *tcv);
 
 /******************************************************************************/
 
@@ -148,7 +148,7 @@ int tcv_get_ext_itendifier(tcv_t *tcv);
  * \param	tcv	Pointer to transceiver structure
  * \return	Transceiver's connector if ok; code error otherwise
  */
-int tcv_get_connector(tcv_t *tcv);
+int tcv_get_connector(const tcv_t *tcv);
 
 /******************************************************************************/
 /**
@@ -161,7 +161,7 @@ typedef union {
 		char eth10g_base_lrm:1;
 		char eth10g_base_lr:1;
 		char eth10g_base_sr:1;
-		char reserved :4;
+		char reserved:4;
 	} bits;
 	uint8_t bmp;
 } tcv_10g_eth_compliance_codes_t;
@@ -172,7 +172,7 @@ typedef union {
  * \param	codes	Pointer to variable to be filled with the 10G compliance codes bitmap
  * \return	0 if OK, error code otherwise
  */
-int tcv_get_10g_compliance_codes(tcv_t *tcv, tcv_10g_eth_compliance_codes_t *codes);
+int tcv_get_10g_compliance_codes(const tcv_t *tcv, tcv_10g_eth_compliance_codes_t *codes);
 
 /******************************************************************************/
 
@@ -197,7 +197,7 @@ typedef union {
  * \param	codes	Pointer to variable to be filled with the infiniband compliance codes bitmap
  * \return	0 if OK, error code otherwise
  */
-int tcv_get_infiniband_compliance_codes(tcv_t *tcv, tcv_infiniband_compliance_codes_t *codes);
+int tcv_get_infiniband_compliance_codes(const tcv_t *tcv, tcv_infiniband_compliance_codes_t *codes);
 
 /******************************************************************************/
 
@@ -220,7 +220,7 @@ typedef union {
  * \param	codes	Pointer to variable to be filled with the infiniband compliance codes bitmap
  * \return	0 if OK, error code otherwise
  */
-int tcv_get_escon_compliance_codes(tcv_t *tcv, tcv_escon_compliance_codes_t *codes);
+int tcv_get_escon_compliance_codes(const tcv_t *tcv, tcv_escon_compliance_codes_t *codes);
 
 /******************************************************************************/
 
@@ -230,6 +230,7 @@ int tcv_get_escon_compliance_codes(tcv_t *tcv, tcv_escon_compliance_codes_t *cod
  */
 typedef union {
 	struct {
+		/* [CR] passar para bool ? */
 		char oc_192_sr:1;
 		char oc_48_lr:1;
 		char oc_48_ir:1;
@@ -240,7 +241,8 @@ typedef union {
 		char oc_3_sm_lr:1;
 		char oc_3_sm_ir:1;
 		char oc_3_sr:1;
-		char reserved :6;
+		/* [CR] passar para uint8_t ? */
+		char reserved:6;
 	} bits;
 	uint16_t bmp;
 } tcv_sonet_compliance_codes_t;
@@ -251,7 +253,7 @@ typedef union {
  * \param	codes	Pointer to variable to be filled with the SONET compliance codes bitmap
  * \return	0 if OK, error code otherwise
  */
-int tcv_get_sonet_compliance_codes(tcv_t *tcv, tcv_sonet_compliance_codes_t *codes);
+int tcv_get_sonet_compliance_codes(const tcv_t *tcv, tcv_sonet_compliance_codes_t *codes);
 
 /******************************************************************************/
 
@@ -261,6 +263,7 @@ int tcv_get_sonet_compliance_codes(tcv_t *tcv, tcv_sonet_compliance_codes_t *cod
  */
 typedef union {
 	struct {
+		/* [CR] passar para bool ? */
 		char sr_compliant:1;
 		char sr_1_compliant:1;
 		char ir_1_compliant:1;
@@ -279,7 +282,7 @@ typedef union {
  * \param	compliances	Pointer to variable to be filled with the SONET compliances
  * \return	0 if OK, error code otherwise
  */
-int tcv_get_sonet_compliances(tcv_t *tcv, tcv_sonet_compliances_t *compliances);
+int tcv_get_sonet_compliances(const tcv_t *tcv, tcv_sonet_compliances_t *compliances);
 
 /******************************************************************************/
 
@@ -289,6 +292,7 @@ int tcv_get_sonet_compliances(tcv_t *tcv, tcv_sonet_compliances_t *compliances);
  */
 typedef union {
 	struct {
+		/* [CR] passar para bool ? */
 		char eth_base_px:1;
 		char eth_base_bx10:1;
 		char eth_100_base_fx:1;
@@ -307,7 +311,7 @@ typedef union {
  * \param	codes	Pointer to variable to be filled with the Ethernet compliance code
  * \return	0 if OK, error code otherwise
  */
-int tcv_get_eth_compliance_codes(tcv_t *tcv, tcv_eth_compliance_codes_t *codes);
+int tcv_get_eth_compliance_codes(const tcv_t *tcv, tcv_eth_compliance_codes_t *codes);
 
 /******************************************************************************/
 
@@ -317,6 +321,7 @@ int tcv_get_eth_compliance_codes(tcv_t *tcv, tcv_eth_compliance_codes_t *codes);
  */
 typedef union {
 	struct {
+		/* [CR] passar para bool ? */
 		char very_long_dist:1;
 		char short_dist:1;
 		char intermediate_dist:1;
@@ -333,7 +338,7 @@ typedef union {
  * \param	codes	Pointer to variable to be filled with the link lengths
  * \return	0 if OK, error code otherwise
  */
-int tcv_get_fibre_channel_link_length(tcv_t *tcv, tcv_fibre_channel_link_length_t *lengths);
+int tcv_get_fibre_channel_link_length(const tcv_t *tcv, tcv_fibre_channel_link_length_t *lengths);
 
 /******************************************************************************/
 
@@ -343,6 +348,7 @@ int tcv_get_fibre_channel_link_length(tcv_t *tcv, tcv_fibre_channel_link_length_
  */
 typedef union {
 	struct {
+		/* [CR] passar para bool ? */
 		char sa:1;
 		char lc:1;
 		char el_intER_enclosure:1;
@@ -361,7 +367,7 @@ typedef union {
  * \param	technology	Pointer to variable to be filled with the fibre channel technology
  * \return	0 if OK, error code otherwise
  */
-int tcv_get_fibre_channel_technology(tcv_t *tcv, tcv_fibre_channel_technology_t *technology);
+int tcv_get_fibre_channel_technology(const tcv_t *tcv, tcv_fibre_channel_technology_t *technology);
 
 /******************************************************************************/
 
@@ -371,6 +377,7 @@ int tcv_get_fibre_channel_technology(tcv_t *tcv, tcv_fibre_channel_technology_t 
  */
 typedef union {
 	struct {
+		/* [CR] passar para bool ? */
 		char active_cable:1;
 		char passive_cable:1;
 		char reserved :6;
@@ -384,7 +391,7 @@ typedef union {
  * \param	technology	Pointer to variable to be filled with the cable technology
  * \return	0 if OK, error code otherwise
  */
-int tcv_get_sfp_plus_cable_technology(tcv_t *tcv, sfp_plus_cable_technology_t *technology);
+int tcv_get_sfp_plus_cable_technology(const tcv_t *tcv, sfp_plus_cable_technology_t *technology);
 
 /******************************************************************************/
 
@@ -394,6 +401,7 @@ int tcv_get_sfp_plus_cable_technology(tcv_t *tcv, sfp_plus_cable_technology_t *t
  */
 typedef union {
 	struct {
+		/* [CR] passar para bool ? */
 		char twin_axial_pair:1;
 		char twisted_pair:1;
 		char miniature_coax:1;
@@ -412,7 +420,7 @@ typedef union {
  * \param	media	Pointer to variable to be filled with media
  * \return	0 if OK, error code otherwise
  */
-int tcv_get_fibre_channel_media(tcv_t *tcv, tcv_fibre_channel_media_t *media);
+int tcv_get_fibre_channel_media(const tcv_t *tcv, tcv_fibre_channel_media_t *media);
 
 /******************************************************************************/
 
@@ -422,6 +430,7 @@ int tcv_get_fibre_channel_media(tcv_t *tcv, tcv_fibre_channel_media_t *media);
  */
 typedef union {
 	struct {
+		/* [CR] passar para bool ? */
 		char sp_1200_mbytes_s:1;
 		char sp_800_mbytes_s:1;
 		char sp_1600_mbytes_s:1;
@@ -440,7 +449,7 @@ typedef union {
  * \param	speed	Pointer to variable to be filled with speed bitmap
  * \return	0 if OK, error code otherwise
  */
-int tcv_get_fibre_channel_speed(tcv_t *tcv, fibre_channel_speed_t *speed);
+int tcv_get_fibre_channel_speed(const tcv_t *tcv, fibre_channel_speed_t *speed);
 
 /******************************************************************************/
 
@@ -458,7 +467,7 @@ int tcv_get_fibre_channel_speed(tcv_t *tcv, fibre_channel_speed_t *speed);
  * \param	tcv	Pointer to transceiver structure
  * \return	Transceiver encoding if ok; code error otherwise
  */
-int tcv_get_encoding(tcv_t *tcv);
+int tcv_get_encoding(const tcv_t *tcv);
 
 /******************************************************************************/
 
@@ -467,7 +476,7 @@ int tcv_get_encoding(tcv_t *tcv);
  * \param	tcv	Pointer to transceiver structure
  * \return	The nominal bit rate if ok; code error otherwise
  */
-int tcv_get_nominal_bit_rate(tcv_t *tcv);
+int tcv_get_nominal_bit_rate(const tcv_t *tcv);
 
 /******************************************************************************/
 
@@ -486,7 +495,7 @@ int tcv_get_nominal_bit_rate(tcv_t *tcv);
  * \param	tcv	Pointer to transceiver structure
  * \return	Rate identifier if ok; code error otherwise
  */
-int tcv_get_rate_identifier(tcv_t *tcv);
+int tcv_get_rate_identifier(const tcv_t *tcv);
 
 /******************************************************************************/
 
@@ -497,7 +506,7 @@ int tcv_get_rate_identifier(tcv_t *tcv);
  * \param	tcv	Pointer to transceiver structure
  * \return	SM length if ok; code error otherwise. If the length is greater than 254000m, return TCV_SM_LENGTH_GREATER_THAN_254000M
  */
-int tcv_get_sm_length(tcv_t *tcv);
+int tcv_get_sm_length(const tcv_t *tcv);
 
 /******************************************************************************/
 
@@ -508,7 +517,7 @@ int tcv_get_sm_length(tcv_t *tcv);
  * \param	tcv	Pointer to transceiver structure
  * \return	OM2 length if ok; code error otherwise. If the length is greater than 2540m, return TCV_OM2_LENGTH_GREATER_THAN_2540M
  */
-int tcv_get_om2_length(tcv_t *tcv);
+int tcv_get_om2_length(const tcv_t *tcv);
 
 /******************************************************************************/
 
@@ -519,7 +528,7 @@ int tcv_get_om2_length(tcv_t *tcv);
  * \param	tcv	Pointer to transceiver structure
  * \return	OM1 length if ok; code error otherwise. If the length is greater than 2540m, return TCV_OM1_LENGTH_GREATER_THAN_2540M
  */
-int tcv_get_om1_length(tcv_t *tcv);
+int tcv_get_om1_length(const tcv_t *tcv);
 
 /******************************************************************************/
 
@@ -530,7 +539,7 @@ int tcv_get_om1_length(tcv_t *tcv);
  * \param	tcv	Pointer to transceiver structure
  * \return	OM4 length if ok; code error otherwise. If the length is greater than 2540m, return TCV_OM4_LENGTH_GREATER_THAN_2540M
  */
-int tcv_get_om4_length_copper_length(tcv_t *tcv);
+int tcv_get_om4_length_copper_length(const tcv_t *tcv);
 
 /******************************************************************************/
 
@@ -541,7 +550,7 @@ int tcv_get_om4_length_copper_length(tcv_t *tcv);
  * \param	tcv	Pointer to transceiver structure
  * \return	OM3 length if ok; code error otherwise. If the length is greater than 2540m, return TCV_OM3_LENGTH_GREATER_THAN_2540M
  */
-int tcv_get_om3_length(tcv_t *tcv);
+int tcv_get_om3_length(const tcv_t *tcv);
 
 /******************************************************************************/
 
@@ -553,7 +562,7 @@ int tcv_get_om3_length(tcv_t *tcv);
  * \param	vendor_name	Pointer to char that will be filled with the vendor name. It must be already allocated.
  * \return	0 if ok; code error otherwise.
  */
-int tcv_get_vendor_name(tcv_t *tcv, char vendor_name[TCV_VENDOR_NAME_SIZE + 1]);
+int tcv_get_vendor_name(const tcv_t *tcv, char vendor_name[TCV_VENDOR_NAME_SIZE + 1]);
 
 /******************************************************************************/
 
@@ -562,7 +571,7 @@ int tcv_get_vendor_name(tcv_t *tcv, char vendor_name[TCV_VENDOR_NAME_SIZE + 1]);
  * \param	tcv			Pointer to transceiver structure
  * \return	Vendor OUI if ok; code error otherwise.
  */
-int tcv_get_vendor_oui(tcv_t *tcv);
+int tcv_get_vendor_oui(const tcv_t *tcv);
 
 /******************************************************************************/
 
@@ -574,7 +583,7 @@ int tcv_get_vendor_oui(tcv_t *tcv);
  * \param	part_number	Pointer to be filled with the vendor part number. It must be already allocated.
  * \return	0 if ok; code error otherwise.
  */
-int tcv_get_vendor_part_number(tcv_t *tcv, char pn[TCV_VENDOR_PN_SIZE + 1]);
+int tcv_get_vendor_part_number(const tcv_t *tcv, char pn[TCV_VENDOR_PN_SIZE + 1]);
 
 /******************************************************************************/
 
@@ -586,7 +595,7 @@ int tcv_get_vendor_part_number(tcv_t *tcv, char pn[TCV_VENDOR_PN_SIZE + 1]);
  * \param	rev	Pointer to be filled with the vendor revision. It must be already allocated.
  * \return	0 if ok; code error otherwise.
  */
-int tcv_get_vendor_revision(tcv_t *tcv, char rev[TCV_VENDOR_REV_SIZE + 1]);
+int tcv_get_vendor_revision(const tcv_t *tcv, char rev[TCV_VENDOR_REV_SIZE + 1]);
 
 /******************************************************************************/
 
@@ -595,7 +604,7 @@ int tcv_get_vendor_revision(tcv_t *tcv, char rev[TCV_VENDOR_REV_SIZE + 1]);
  * \param	tcv	Pointer to transceiver structure
  * \return	Wavelength if ok; code error otherwise.
  */
-int tcv_get_wavelength(tcv_t *tcv);
+int tcv_get_wavelength(const tcv_t *tcv);
 
 /******************************************************************************/
 
@@ -605,6 +614,7 @@ int tcv_get_wavelength(tcv_t *tcv);
  */
 typedef union {
 	struct {
+		/* [CR] passar para bool ? */
 		char fc_pi_4_apndx_h_compliant:1;
 		char sff_8431_apndx_e_compliant:1;
 		char reserved :6;
@@ -618,7 +628,7 @@ typedef union {
  * \param	compliance	Pointer to variable to be filled with compliance bitmap
  * \return	0 if OK, error code otherwise
  */
-int tcv_get_passive_cable_compliance(tcv_t *tcv, passive_cable_compliance_t *compliance);
+int tcv_get_passive_cable_compliance(const tcv_t *tcv, passive_cable_compliance_t *compliance);
 
 /******************************************************************************/
 
@@ -628,6 +638,7 @@ int tcv_get_passive_cable_compliance(tcv_t *tcv, passive_cable_compliance_t *com
  */
 typedef union {
 	struct {
+		/* [CR] passar para bool ? */
 		char fc_pi_4_limiting_compliant:1;
 		char sff_8431_limiting_compliant:1;
 		char fc_pi_4_apndx_h_compliant:1;
@@ -643,7 +654,7 @@ typedef union {
  * \param	compliance	Pointer to variable to be filled with compliance bitmap
  * \return	0 if OK, error code otherwise
  */
-int tcv_get_active_cable_compliance(tcv_t *tcv, active_cable_compliance_t *compliance);
+int tcv_get_active_cable_compliance(const tcv_t *tcv, active_cable_compliance_t *compliance);
 
 /******************************************************************************/
 
@@ -652,7 +663,7 @@ int tcv_get_active_cable_compliance(tcv_t *tcv, active_cable_compliance_t *compl
  * \param	tcv			Pointer to transceiver structure
  * \return	Read CC Base if OK, error code otherwise
  */
-int tcv_get_cc_base(tcv_t *tcv);
+int tcv_get_cc_base(const tcv_t *tcv);
 
 /******************************************************************************/
 
@@ -661,7 +672,7 @@ int tcv_get_cc_base(tcv_t *tcv);
  * \param	tcv			Pointer to transceiver structure
  * \return	Calculated CC Base if OK, error code otherwise
  */
-int tcv_calculate_cc_base(tcv_t *tcv);
+int tcv_calculate_cc_base(const tcv_t *tcv);
 
 /******************************************************************************/
 
@@ -671,6 +682,7 @@ int tcv_calculate_cc_base(tcv_t *tcv);
  */
 typedef union {
 	struct {
+		/* [CR] passar para bool ? */
 		char cooled_laser_transmitted:1;
 		char power_lever_2:1;
 		char linear_receiver_out:1;
@@ -689,7 +701,7 @@ typedef union {
  * \param	options	Pointer to variable to be filled with the implemented options
  * \return	0 if OK, error code otherwise
  */
-int tcv_get_implemented_options(tcv_t *tcv, tcv_implemented_options_t *options);
+int tcv_get_implemented_options(const tcv_t *tcv, tcv_implemented_options_t *options);
 
 /******************************************************************************/
 
@@ -698,7 +710,7 @@ int tcv_get_implemented_options(tcv_t *tcv, tcv_implemented_options_t *options);
  * \param	tcv	Pointer to transceiver structure
  * \return	The max bit rate if ok; code error otherwise
  */
-int tcv_get_max_bit_rate(tcv_t *tcv);
+int tcv_get_max_bit_rate(const tcv_t *tcv);
 
 /******************************************************************************/
 
@@ -707,7 +719,7 @@ int tcv_get_max_bit_rate(tcv_t *tcv);
  * \param	tcv	Pointer to transceiver structure
  * \return	The min bit rate if ok; code error otherwise
  */
-int tcv_get_min_bit_rate(tcv_t *tcv);
+int tcv_get_min_bit_rate(const tcv_t *tcv);
 
 /******************************************************************************/
 
@@ -719,7 +731,7 @@ int tcv_get_min_bit_rate(tcv_t *tcv);
  * \param	vendor_sn	Pointer to char that will be filled with the vendor serial number. It must be already allocated.
  * \return	0 if ok; code error otherwise.
  */
-int tcv_get_vendor_sn(tcv_t *tcv, char vendor_sn[TCV_VENDOR_SN_SIZE + 1]);
+int tcv_get_vendor_sn(const tcv_t *tcv, char vendor_sn[TCV_VENDOR_SN_SIZE + 1]);
 
 /******************************************************************************/
 
@@ -742,7 +754,7 @@ typedef struct {
  * \param	date_code	Pointer to variable that will be filled with the vendor's date code.
  * \return	0 if ok; code error otherwise.
  */
-int tcv_get_vendor_date_code(tcv_t *tcv, tcv_date_code_t *date_code);
+int tcv_get_vendor_date_code(const tcv_t *tcv, tcv_date_code_t *date_code);
 
 /******************************************************************************/
 
@@ -752,6 +764,7 @@ int tcv_get_vendor_date_code(tcv_t *tcv, tcv_date_code_t *date_code);
  */
 typedef union {
 	struct {
+		/* [CR] passar para bool ? */
 		char dd_implemented:1;
 		char internally_calibrated:1;
 		char externally_calibrated:1;
@@ -768,7 +781,7 @@ typedef union {
  * \param	diag_type	Pointer to variable that will be filled with the SFP's monitoring type.
  * \return	0 if ok; code error otherwise.
  */
-int tcv_get_diagnostic_type(tcv_t *tcv, tcv_diagnostic_type_t *diag_type);
+int tcv_get_diagnostic_type(const tcv_t *tcv, tcv_diagnostic_type_t *diag_type);
 
 /******************************************************************************/
 
@@ -778,6 +791,7 @@ int tcv_get_diagnostic_type(tcv_t *tcv, tcv_diagnostic_type_t *diag_type);
  */
 typedef union {
 	struct {
+		/* [CR] passar para bool ? */
 		char alarm_implemented:1;
 		char soft_tx_disable_ctrl_mon_implemented:1;
 		char soft_tx_fault_mon_implemented:1;
@@ -796,7 +810,7 @@ typedef union {
  * \param	options	Pointer to variable that will be filled with the SFP's monitoring type.
  * \return	0 if ok; code error otherwise.
  */
-int tcv_get_enhance_options(tcv_t *tcv, tcv_enhanced_options_type_t *options);
+int tcv_get_enhance_options(const tcv_t *tcv, tcv_enhanced_options_type_t *options);
 
 /******************************************************************************/
 
@@ -805,7 +819,7 @@ int tcv_get_enhance_options(tcv_t *tcv, tcv_enhanced_options_type_t *options);
  * \param	tcv			Pointer to transceiver structure
  * \return	Read CC Extended if OK, error code otherwise
  */
-int tcv_get_cc_ext(tcv_t *tcv);
+int tcv_get_cc_ext(const tcv_t *tcv);
 
 /******************************************************************************/
 
@@ -814,7 +828,7 @@ int tcv_get_cc_ext(tcv_t *tcv);
  * \param	tcv			Pointer to transceiver structure
  * \return	Calculated CC Extended if OK, error code otherwise
  */
-int tcv_calculate_cc_ext(tcv_t *tcv);
+int tcv_calculate_cc_ext(const tcv_t *tcv);
 
 /******************************************************************************/
 
@@ -826,45 +840,46 @@ int tcv_calculate_cc_ext(tcv_t *tcv);
  * generic get/set operations on transceivers
  */
 struct tcv_functions  {
-	int(*get_itendifier)(tcv_t *);
-	int(*get_ext_itendifier)(tcv_t *);
-	int(*get_connector)(tcv_t *);
-	int(*get_vendor_name)(tcv_t *, char* name);
-	int(*get_vendor_oui)(tcv_t *);
-	int(*get_vendor_revision)(tcv_t *, char* rev);
-	int(*get_vendor_part_number)(tcv_t *, char* pn);
-	int(*get_vendor_serial_number)(tcv_t *, char* sn);
-	int(*get_10g_compliance_codes)(tcv_t *, tcv_10g_eth_compliance_codes_t *);
-	int(*get_infiniband_compliance_codes)(tcv_t *, tcv_infiniband_compliance_codes_t *);
-	int(*get_escon_compliance_codes)(tcv_t *, tcv_escon_compliance_codes_t *);
-	int(*get_sonet_compliance_codes)(tcv_t *, tcv_sonet_compliance_codes_t *);
-	int(*get_eth_compliance_codes)(tcv_t *, tcv_eth_compliance_codes_t *);
-	int(*get_fibre_channel_link_length)(tcv_t *, tcv_fibre_channel_link_length_t *);
-	int(*get_fibre_channel_technology)(tcv_t *, tcv_fibre_channel_technology_t *);
-	int(*get_sfp_plus_cable_technology)(tcv_t *, sfp_plus_cable_technology_t *);
-	int(*get_fibre_channel_media)(tcv_t *, tcv_fibre_channel_media_t *);
-	int(*get_fibre_channel_speed)(tcv_t *, fibre_channel_speed_t *);
-	int(*get_encoding)(tcv_t*);
-	int(*get_nominal_bit_rate)(tcv_t*);
-	int(*get_rate_identifier)(tcv_t*);
-	int(*get_sm_length)(tcv_t *);
-	int(*get_om1_length)(tcv_t *);
-	int(*get_om2_length)(tcv_t *);
-	int(*get_om3_length)(tcv_t *);
-	int(*get_om4_copper_length)(tcv_t *);
-	int(*get_wave_len)(tcv_t*);
-	int(*get_passive_cable_compliance)(tcv_t *, passive_cable_compliance_t *);
-	int(*get_active_cable_compliance)(tcv_t *, active_cable_compliance_t *);
-	int(*get_cc_base)(tcv_t*);
-	int(*calculate_cc_base)(tcv_t *);
-	int(*get_implemented_options)(tcv_t *, tcv_implemented_options_t *);
-	int(*get_max_bit_rate)(tcv_t*);
-	int(*get_min_bit_rate)(tcv_t*);
-	int(*get_vendor_date_code)(tcv_t *, tcv_date_code_t *);
-	int(*get_diagnostic_type)(tcv_t *, tcv_diagnostic_type_t *);
-	int(*get_enhanced_options)(tcv_t *, tcv_enhanced_options_type_t *);
-	int(*get_cc_ext)(tcv_t*);
-	int(*calculate_cc_ext)(tcv_t *);
+	/* [CR] não está seguindo um padrão quanto a declarar ou não todas os parâmetros. */
+	int(*get_itendifier)(const tcv_t *);
+	int(*get_ext_itendifier)(const tcv_t *);
+	int(*get_connector)(const tcv_t *);
+	int(*get_vendor_name)(const tcv_t *, char* name);
+	int(*get_vendor_oui)(const tcv_t *);
+	int(*get_vendor_revision)(const tcv_t *, char* rev);
+	int(*get_vendor_part_number)(const tcv_t *, char* pn);
+	int(*get_vendor_serial_number)(const tcv_t *, char* sn);
+	int(*get_10g_compliance_codes)(const tcv_t *, tcv_10g_eth_compliance_codes_t *);
+	int(*get_infiniband_compliance_codes)(const tcv_t *, tcv_infiniband_compliance_codes_t *);
+	int(*get_escon_compliance_codes)(const tcv_t *, tcv_escon_compliance_codes_t *);
+	int(*get_sonet_compliance_codes)(const tcv_t *, tcv_sonet_compliance_codes_t *);
+	int(*get_eth_compliance_codes)(const tcv_t *, tcv_eth_compliance_codes_t *);
+	int(*get_fibre_channel_link_length)(const tcv_t *, tcv_fibre_channel_link_length_t *);
+	int(*get_fibre_channel_technology)(const tcv_t *, tcv_fibre_channel_technology_t *);
+	int(*get_sfp_plus_cable_technology)(const tcv_t *, sfp_plus_cable_technology_t *);
+	int(*get_fibre_channel_media)(const tcv_t *, tcv_fibre_channel_media_t *);
+	int(*get_fibre_channel_speed)(const tcv_t *, fibre_channel_speed_t *);
+	int(*get_encoding)(const tcv_t*);
+	int(*get_nominal_bit_rate)(const tcv_t*);
+	int(*get_rate_identifier)(const tcv_t*);
+	int(*get_sm_length)(const tcv_t *);
+	int(*get_om1_length)(const tcv_t *);
+	int(*get_om2_length)(const tcv_t *);
+	int(*get_om3_length)(const tcv_t *);
+	int(*get_om4_copper_length)(const tcv_t *);
+	int(*get_wave_len)(const tcv_t*);
+	int(*get_passive_cable_compliance)(const tcv_t *, passive_cable_compliance_t *);
+	int(*get_active_cable_compliance)(const tcv_t *, active_cable_compliance_t *);
+	int(*get_cc_base)(const tcv_t*);
+	int(*calculate_cc_base)(const tcv_t *);
+	int(*get_implemented_options)(const tcv_t *, tcv_implemented_options_t *);
+	int(*get_max_bit_rate)(const tcv_t*);
+	int(*get_min_bit_rate)(const tcv_t*);
+	int(*get_vendor_date_code)(const tcv_t *, tcv_date_code_t *);
+	int(*get_diagnostic_type)(const tcv_t *, tcv_diagnostic_type_t *);
+	int(*get_enhanced_options)(const tcv_t *, tcv_enhanced_options_type_t *);
+	int(*get_cc_ext)(const tcv_t*);
+	int(*calculate_cc_ext)(const tcv_t *);
 };
 /******************************************************************************/
 
