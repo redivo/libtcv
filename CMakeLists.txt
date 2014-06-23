@@ -30,7 +30,7 @@ cmake_minimum_required (VERSION 2.8)
 # Project Name
 project (libtcv)
 # Make will run in verbose mode - for debugging makefiles
-# SET(CMAKE_VERBOSE_MAKEFILE On)
+SET(CMAKE_VERBOSE_MAKEFILE On)
 # Enable ExternalProject CMake module
 include(ExternalProject)
 
@@ -92,25 +92,58 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/tests/)
 
 # Check Compiler version
 # borrowed from http://stackoverflow.com/questions/4058565/check-gcc-minor-in-cmake
-execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
-                OUTPUT_VARIABLE GCC_VERSION)
+execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion OUTPUT_VARIABLE COMPILER_VERSION)
 
-if (GCC_VERSION VERSION_GREATER 4.8 OR GCC_VERSION VERSION_EQUAL 4.8)
+message(STATUS ${CMAKE_CXX_COMPILER_ID})
+
+# GCC specifics for C++11
+if(${CMAKE_CXX_COMPILER_ID} MATCHES "GNU" )
+  message(STATUS "Using gnu compiler")
+
+  if (COMPILER_VERSION VERSION_GREATER 4.7 OR GCC_VERSION VERSION_EQUAL 4.7)
 	message(STATUS "C++11 activated.")
 	SET(CXX11 "-std=c++11")
-elseif(GCC_VERSION VERSION_GREATER 4.3 OR GCC_VERSION VERSION_EQUAL 4.3)
+  elseif (COMPILER_VERSION VERSION_GREATER 4.3 OR GCC_VERSION VERSION_EQUAL 4.3)
 	message(WARNING "Preview C++0x - your compiler may not have full C++11 support")
 	SET(CXX11 "-std=c++0x")
-else ()
+  else ()
 	message(WARNING "Your GCC is quite old - C++11 will not work!")
-endif()
+  endif()
 
-# input Library for profiling is not found by find_library
-# find_library(COVERAGE_LIB gcov /usr/lib/gcc/x86_64-linux-gnu/4.8 REQUIRED)
-set(COVERAGE_LIB gcov)
+  # input Library for profiling is not found by find_library
+  # find_library(COVERAGE_LIB gcov /usr/lib/gcc/x86_64-linux-gnu/4.8 REQUIRED)
+  set(COVERAGE_LIB gcov)
+
+  if(TEST_COVERAGE)
+	message(STATUS "setting GCC coverage flags")
+    SET(CMAKE_C_FLAGS     " ${CMAKE_C_FLAGS} -g -fprofile-arcs -ftest-coverage ")
+    SET(CMAKE_CXX_FLAGS   " ${CMAKE_CXX_FLAGS} -g -fprofile-arcs -ftest-coverage ")
+    SET(CMAKE_LINK_FLAGS  " ${CMAKE_LINK_FLAGS} -O0 -g ")
+  endif()
+
+
+#Clang specific settings for C++11
+elseif( ${CMAKE_CXX_COMPILER_ID} MATCHES "Clang" )
+  message(STATUS "Using clang compiler")
+  if (COMPILER_VERSION VERSION_GREATER 2.9 OR GCC_VERSION VERSION_EQUAL 2.9)
+	message(STATUS "C++11 activated.")
+	SET(CXX11 "-std=c++11")
+  endif()
+
+  # LLVM provides code coverage in libprofile_rt
+  set(COVERAGE_LIB profile_rt)
+
+  if(TEST_COVERAGE)
+	message(STATUS "setting clang/llvm coverage flags")
+    SET(CMAKE_C_FLAGS     " ${CMAKE_C_FLAGS} --coverage ")
+    SET(CMAKE_CXX_FLAGS   " ${CMAKE_CXX_FLAGS} --coverage ")
+  endif()
+
+endif()
 
 # Threading library for gtest
 find_library(THREAD_LIB pthread)
+
 
 #--------------------------------------------------------------------------------
 # Google Test as external project
@@ -136,7 +169,7 @@ if(BUILD_TEST)
 	# Disable install step
 	INSTALL_COMMAND ""
 	# Empty update command to speed up make - we don't need to constantly check
-	UPDATE_COMMAND ""
+ 	UPDATE_COMMAND ""
  	)
 endif(BUILD_TEST)
 ################################################################################
@@ -153,12 +186,6 @@ SET(CMAKE_C_FLAGS_RELEASE  " ${CMAKE_C_FLAGS_RELEASE} -ffunction-sections -fdata
 
 SET(CMAKE_EXE_LINKER_FLAGS_RELEASE " ${CMAKE_EXE_LINKER_FLAGS_RELEASE} -Wl,--gc-sections -Wl,-Map,${PROJECT_NAME}.map ")
 
-if(TEST_COVERAGE)
-    SET(CMAKE_C_FLAGS     " ${CMAKE_C_FLAGS} -g -fprofile-arcs -ftest-coverage ")
-    SET(CMAKE_CXX_FLAGS   " ${CMAKE_CXX_FLAGS} -g -fprofile-arcs -ftest-coverage ")
-    SET(CMAKE_LINK_FLAGS  " ${CMAKE_LINK_FLAGS} -O0 -g ")
-endif()
-
 if(PROFILE)
     SET(CMAKE_C_FLAGS      " ${CMAKE_C_FLAGS} -g  -pg ")
     SET(CMAKE_CXX_FLAGS    " ${CMAKE_CXX_FLAGS} -g -pg ")
@@ -173,15 +200,17 @@ endif()
 # Targets for intermeritate Archives / Libraries
 #-------------------------------------------------------------------------------
 # Directory of project libraries (static & dynamic)
-# SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-# SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${LIB_DIR})
+SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${LIB_DIR})
 
 # Create a Library with all object files of project except main
 add_library( ${LIBRARY_NAME} SHARED ${LIB_SRCS})
 SET_TARGET_PROPERTIES(${LIBRARY_NAME}  PROPERTIES
     VERSION ${VERSION})
-SET_TARGET_PROPERTIES(${LIBRARY_NAME}  PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY ${LIB_DIR})
+#SET_TARGET_PROPERTIES(${LIBRARY_NAME}  PROPERTIES
+#    LIBRARY_OUTPUT_DIRECTORY ${LIB_DIR})
+#SET_TARGET_PROPERTIES(${LIBRARY_NAME}  PROPERTIES
+#    ARCHIVE_OUTPUT_DIRECTORY ${LIB_DIR})
 
 
 #-------------------------------------------------------------------------------

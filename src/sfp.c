@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+
 #include "libtcv/tcv.h"
 #include "libtcv/sfp.h"
 
@@ -737,15 +738,18 @@ int sfp_get_vendor_name(tcv_t *tcv, char vendor_name[BASIC_INFO_REG_VENDOR_NAME_
 
 int sfp_get_vendor_oui(tcv_t *tcv)
 {
-	int oui = 0;
+	uint32_t oui = 0;
 	int i;
 
 	if (tcv == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
 
 	/* Concatenate the 3 bytes in just one variable */
-	for (i = 0; i < BASIC_INFO_REG_VENDOR_OUI_SIZE_SIZE; i++)
-		oui |= ((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_VENDOR_OUI + i] << (8 * i);
+	for (i = 0; i < BASIC_INFO_REG_VENDOR_OUI_SIZE_SIZE; i++){
+		/* bytes are stored in eeprom in big endian order */
+		oui = (oui<< 8);
+		oui |= ((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_VENDOR_OUI+i];
+	}
 
 	return oui;
 }
