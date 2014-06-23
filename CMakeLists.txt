@@ -131,12 +131,13 @@ elseif( ${CMAKE_CXX_COMPILER_ID} MATCHES "Clang" )
   endif()
 
   # LLVM provides code coverage in libprofile_rt
-  set(COVERAGE_LIB profile_rt)
+  #set(COVERAGE_LIB profile_rt)
 
   if(TEST_COVERAGE)
 	message(STATUS "setting clang/llvm coverage flags")
     SET(CMAKE_C_FLAGS     " ${CMAKE_C_FLAGS} --coverage ")
     SET(CMAKE_CXX_FLAGS   " ${CMAKE_CXX_FLAGS} --coverage ")
+    SET(CMAKE_LINK_FLAGS  " ${CMAKE_LINK_FLAGS} --coverage ")
   endif()
 
 endif()
@@ -184,7 +185,8 @@ SET(CMAKE_CXX_FLAGS     " ${CMAKE_CXX_FLAGS} ${GCC_WARNING_FLAGS} ${CXX11}")
 SET(CMAKE_CXX_FLAGS_RELEASE  " ${CMAKE_CXX_FLAGS_RELEASE} -ffunction-sections -fdata-sections ${CXX11}")
 SET(CMAKE_C_FLAGS_RELEASE  " ${CMAKE_C_FLAGS_RELEASE} -ffunction-sections -fdata-sections ")
 
-SET(CMAKE_EXE_LINKER_FLAGS_RELEASE " ${CMAKE_EXE_LINKER_FLAGS_RELEASE} -Wl,--gc-sections -Wl,-Map,${PROJECT_NAME}.map ")
+SET(CMAKE_EXE_LINKER_FLAGS_RELEASE 
+    " ${CMAKE_EXE_LINKER_FLAGS_RELEASE} -Wl,--gc-sections -Wl,-Map,${PROJECT_NAME}.map ")
 
 if(PROFILE)
     SET(CMAKE_C_FLAGS      " ${CMAKE_C_FLAGS} -g  -pg ")
@@ -226,8 +228,6 @@ if(BUILD_TEST)
     #Could also be your own main.cpp
     set(RUN_TEST_MAIN ${binary_dir}/libgtest_main.a)
 
-    ENABLE_TESTING()
-
     # Note: we do not add the project as binary library (libtransmogrify.a)
     #       to build with debug / coverage flags
     add_executable(${TEST_BINARY_NAME} ${LIB_SRCS} ${TEST_HARNESS_SRC} )
@@ -243,6 +243,9 @@ if(BUILD_TEST)
         TARGET_LINK_LIBRARIES(${TEST_BINARY_NAME}  ${COVERAGE_LIB})
     endif()
 
+      
+    # enable Cmake's make test  
+    ENABLE_TESTING()
     # Call the testBinary with junit-xml output
     add_test(junitout "./${TEST_BIN_DIR}/${TEST_BINARY_NAME}"
 	--gtest_output=xml:gtestresults.xml )
