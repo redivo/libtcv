@@ -146,3 +146,65 @@ TEST_F(TestFixtureClass, extendedIdent)
 	tcv_init(tcv, 1, i2c_read, i2c_write);
 	EXPECT_EQ(tcv->fun->get_ext_itendifier(tcv),0x04);
 }
+
+
+/* Test for diagnositcs type */
+TEST_F(TestFixtureClass, diagnosticsTypeValid)
+{
+	auto mtcv = get_tcv(1);
+	tcv_t *tcv = mtcv->get_ctcv();
+	uint8_t diag_caps = 0x60;
+	tcv_diagnostic_type_t diags;
+	EXPECT_EQ( mtcv->manip_eeprom(92, vector<uint8_t>(1, diag_caps)), 1);
+	tcv_init(tcv, 1, i2c_read, i2c_write);
+	EXPECT_EQ(tcv->fun->get_diagnostic_type(tcv, &diags),0);
+
+	EXPECT_EQ(diags.bits.address_change_required, 0);
+	EXPECT_EQ(diags.bits.pwr_measurement_type, 0);
+	EXPECT_EQ(diags.bits.internally_calibrated, 1);
+	EXPECT_EQ(diags.bits.externally_calibrated, 0);
+	EXPECT_EQ(diags.bits.dd_implemented, 1);
+
+}
+
+/* Test for diagnositcs type */
+TEST_F(TestFixtureClass, diagnosticsTypeInValid)
+{
+	auto mtcv = get_tcv(1);
+	tcv_t *tcv = mtcv->get_ctcv();
+	uint8_t diag_caps = 0xFF;
+	tcv_diagnostic_type_t diags;
+	EXPECT_EQ( mtcv->manip_eeprom(92, vector<uint8_t>(1, diag_caps)), 1);
+	tcv_init(tcv, 1, i2c_read, i2c_write);
+	EXPECT_EQ(tcv->fun->get_diagnostic_type(tcv, &diags),0);
+	/* Function should truncate invalid crap */
+	EXPECT_EQ(diags.bmp, 0x1F);
+}
+
+
+/* Test for diagnositcs type */
+TEST_F(TestFixtureClass, enhancedOptionsValid)
+{
+	auto mtcv = get_tcv(1);
+	tcv_t *tcv = mtcv->get_ctcv();
+	uint8_t raw = 0x5A;
+	tcv_enhanced_options_type_t eopts;
+	EXPECT_EQ( mtcv->manip_eeprom(93, vector<uint8_t>(1, raw)), 1);
+	tcv_init(tcv, 1, i2c_read, i2c_write);
+	EXPECT_EQ(tcv->fun->get_enhanced_options(tcv, &eopts),0);
+	EXPECT_EQ(eopts.bmp, 0x2D);
+}
+
+
+/* Test for diagnositcs type */
+TEST_F(TestFixtureClass, enhancedOptionsInValid)
+{
+	auto mtcv = get_tcv(1);
+	tcv_t *tcv = mtcv->get_ctcv();
+	uint8_t raw = 0xFF;
+	tcv_enhanced_options_type_t eopts;
+	EXPECT_EQ( mtcv->manip_eeprom(93, vector<uint8_t>(1, raw)), 1);
+	tcv_init(tcv, 1, i2c_read, i2c_write);
+	EXPECT_EQ(tcv->fun->get_enhanced_options(tcv, &eopts),0);
+	EXPECT_EQ(eopts.bmp, 0x7F);
+}

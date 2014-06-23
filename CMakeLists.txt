@@ -30,7 +30,7 @@ cmake_minimum_required (VERSION 2.8)
 # Project Name
 project (libtcv)
 # Make will run in verbose mode - for debugging makefiles
-SET(CMAKE_VERBOSE_MAKEFILE On)
+# SET(CMAKE_VERBOSE_MAKEFILE On)
 # Enable ExternalProject CMake module
 include(ExternalProject)
 
@@ -130,9 +130,7 @@ elseif( ${CMAKE_CXX_COMPILER_ID} MATCHES "Clang" )
 	SET(CXX11 "-std=c++11")
   endif()
 
-  # LLVM provides code coverage in libprofile_rt
-  #set(COVERAGE_LIB profile_rt)
-
+  # LLVM provides code coverage in libprofile_rt 
   if(TEST_COVERAGE)
 	message(STATUS "setting clang/llvm coverage flags")
     SET(CMAKE_C_FLAGS     " ${CMAKE_C_FLAGS} --coverage ")
@@ -242,7 +240,6 @@ if(BUILD_TEST)
     if(TEST_COVERAGE)
         TARGET_LINK_LIBRARIES(${TEST_BINARY_NAME}  ${COVERAGE_LIB})
     endif()
-
       
     # enable Cmake's make test  
     ENABLE_TESTING()
