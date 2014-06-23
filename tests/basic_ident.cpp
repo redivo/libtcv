@@ -59,4 +59,33 @@ TEST_F(TestFixtureClass, identSFP)
 	EXPECT_EQ(tcv->fun->get_itendifier(tcv), TCV_TYPE_SFP);
 }
 
+/* Test update vendor oui */
+TEST_F(TestFixtureClass, getVendorOUI)
+{
+	auto mtcv = get_tcv(1);
+	tcv_t *tcv = mtcv->get_ctcv();
+	vector<uint8_t> vid = {0x01, 0x02, 0x03};
+	/*write 3 bytes to eeprom */
+	EXPECT_EQ(mtcv->manip_eeprom(37, vid), 3);
+	int ret = tcv_init(tcv, 1, i2c_read, i2c_write);
+	EXPECT_EQ(ret, 0);
+	EXPECT_EQ(tcv->fun->get_vendor_oui(tcv), 0x010203);
+}
+
+
+/* Test update vendor oui */
+TEST_F(TestFixtureClass, getVendorName)
+{
+	auto mtcv = get_tcv(1);
+	tcv_t *tcv = mtcv->get_ctcv();
+	string name = "Fritz & Frieda  "; //16 chars
+	char buf[128];
+	/*write the name to eeprom */
+	EXPECT_EQ(mtcv->manip_eeprom(20, name), name.length());
+	int ret = tcv_init(tcv, 1, i2c_read, i2c_write);
+	EXPECT_EQ(ret, 0);
+	EXPECT_EQ(tcv->fun->get_vendor_name(tcv,buf),0);
+	EXPECT_STREQ(buf, name.c_str());
+}
+
 
