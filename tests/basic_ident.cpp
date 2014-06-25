@@ -33,9 +33,9 @@ public:
 
 
 TEST_F(TestFixtureClass, setupworks) {
-//	EXPECT_NE(get_tcv(1), nullptr);
-//	EXPECT_NE(get_tcv(3), nullptr);
-//	EXPECT_EQ(get_tcv(2), nullptr);
+	EXPECT_NE(get_tcv(1), nullptr);
+	EXPECT_NE(get_tcv(3), nullptr);
+	EXPECT_EQ(get_tcv(2), nullptr);
 }
 
 TEST_F(TestFixtureClass, readBeyond)
