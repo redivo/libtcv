@@ -1175,6 +1175,43 @@ int sfp_calculate_cc_ext(tcv_t *tcv)
 	return (sum & 0xff);
 }
 
+
+/******************************************************************************/
+
+const uint8_t* sfp_get_vendor_rom(tcv_t *tcv)
+{
+	const size_t VENDOR_ROM_OFFSET = 96;
+
+	if (tcv == NULL || tcv->data == NULL)
+		return NULL;
+
+	return &((sfp_data_t*) tcv->data)->a0[VENDOR_ROM_OFFSET];
+}
+
+/******************************************************************************/
+
+size_t sfp_get_vendor_rom_size(tcv_t *tcv)
+{
+	if (tcv == NULL || tcv->data == NULL)
+		return 0;
+
+	return 32;
+}
+
+/******************************************************************************/
+
+const uint8_t* sfp_get_8079_rom(tcv_t *tcv)
+{
+
+	const size_t SFF_8079_ROM_OFFSET = 128;
+
+	if (tcv == NULL || tcv->data == NULL)
+		return NULL;
+
+	return &((sfp_data_t*) tcv->data)->a0[SFF_8079_ROM_OFFSET];
+}
+
+
 /******************************************************************************/
 
 /**
@@ -1220,4 +1257,7 @@ const struct tcv_functions sfp_funcs = {
 	.get_enhanced_options = sfp_get_enhance_options,
 	.get_cc_ext = sfp_get_cc_ext,
 	.calculate_cc_ext = sfp_calculate_cc_ext,
+	.get_vendor_rom = sfp_get_vendor_rom,
+	.get_vendor_rom_size = sfp_get_vendor_rom_size,
+	.get_8079_rom = sfp_get_8079_rom,
 };

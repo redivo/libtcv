@@ -11,7 +11,6 @@
 #define FAKE_HW_HPP_
 
 
-#include <map>
 #include <cstdint>
 #include <memory>
 #include "libtcv/tcv.h"

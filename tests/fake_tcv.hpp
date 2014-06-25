@@ -11,6 +11,7 @@
 
 #include <cstdint>
 #include <iostream>
+#include <vector>
 
 extern "C" {
 #include <libtcv/tcv.h>

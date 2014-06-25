@@ -818,6 +818,32 @@ int tcv_calculate_cc_ext(tcv_t *tcv);
 
 /******************************************************************************/
 
+/**
+ * \brief	Allow direct access to non-specified vendor area of page a0
+ * \param	tcv Pointer to transceiver structure
+ * \return	memory at byte 96-127
+ */
+const uint8_t* tcv_get_vendor_rom(tcv_t *tcv);
+
+/******************************************************************************/
+
+/**
+ * \brief	Inform the size of vendor specific data
+ * \param	tcv Pointer to transceiver structure
+ * \return	32 for SFP and XFP, 0 if invalid/non-existent
+ */
+size_t tcv_get_vendor_rom_size(tcv_t *tcv);
+
+/******************************************************************************/
+/**
+ * \brief	Allow access to SFF-8079 Application selection area
+ *              This function must be obsoleted when SFF-8079 is implemented
+ * \param	tcv Pointer to transceiver structure
+ * \return	memory at byte 128-255 or NULL if not available
+ */
+const uint8_t* tcv_get_8079_rom(tcv_t *tcv);
+
+/******************************************************************************/
 
 
 /**
@@ -865,6 +891,9 @@ struct tcv_functions  {
 	int(*get_enhanced_options)(tcv_t *, tcv_enhanced_options_type_t *);
 	int(*get_cc_ext)(tcv_t*);
 	int(*calculate_cc_ext)(tcv_t *);
+	const uint8_t* (*get_vendor_rom)(tcv_t *);
+	size_t (*get_vendor_rom_size)(tcv_t *);
+	const uint8_t* (*get_8079_rom)(tcv_t *);
 };
 /******************************************************************************/
 

@@ -2,6 +2,8 @@
 #include <algorithm>    // std::copy
 #include <vector>
 #include <memory>
+#include <map>
+
 #include "fake_hw.hpp"
 
 
