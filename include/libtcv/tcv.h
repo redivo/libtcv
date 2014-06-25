@@ -80,8 +80,9 @@ typedef struct {
 	int index;				//! Port index referent to TCV port.
 	i2c_read_cb_t read;		//! Callback to I2C read function.
 	i2c_write_cb_t write;	//! Callback to I2C write function.
-	void *data;				//! TCV internal data. It includes all internal devices.
 	const struct tcv_functions * fun; //! Transceiver methods
+	/** TCV internal data - don't touch !*/
+	void *data;
 } tcv_t;
 
 /******************************************************************************/
@@ -95,6 +96,16 @@ typedef struct {
  * \return	0 if ok, error code otherwise.
  */
 int tcv_init(tcv_t *tcv, int index, i2c_read_cb_t read, i2c_write_cb_t write);
+
+
+/******************************************************************************/
+/**
+ * \brief	Deallocate internal ressources for given transceiver
+ * \param	tcv		Pointer to TCV's structure to be destroyed
+ * \return	0 if ok, error code otherwise.
+ */
+int tcv_destroy(tcv_t *tcv);
+
 
 /******************************************************************************/
 /**

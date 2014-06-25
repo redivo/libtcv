@@ -37,11 +37,17 @@ int tcv_init(tcv_t *tcv, int index, i2c_read_cb_t read, i2c_write_cb_t write)
 			sfp_data = malloc(sizeof(sfp_data_t));
 			if(!sfp_data)
 				return TCV_ERR_GENERIC;
-			sfp_data->type  = TCV_TYPE_SFP;
-			ret = tcv->read(index, TCV_DEVADDR_A0, 0, sfp_data->a0, sizeof(sfp_data->a0));
-			if(ret < 0 )
-				return ret;
 
+			ret = tcv->read(index, TCV_DEVADDR_A0, 0, sfp_data->a0, sizeof(sfp_data->a0));
+			if(ret < 0 ){
+				/*
+				 * Make sure we free after read-error
+				 * smart pointers would be really nice...
+				 */
+				free(sfp_data);
+				return ret;
+			}
+			sfp_data->type  = TCV_TYPE_SFP;
 			tcv->data = sfp_data;
 			tcv->fun = &sfp_funcs;
 			break;
@@ -55,6 +61,20 @@ int tcv_init(tcv_t *tcv, int index, i2c_read_cb_t read, i2c_write_cb_t write)
 		default:
 			return TCV_ERR_GENERIC;
 	}
+
+	return 0;
+}
+
+/******************************************************************************/
+
+int tcv_destroy(tcv_t *tcv)
+{
+	/* pretty crude check for invalid data */
+	if(!tcv || !tcv->data)
+		return TCV_ERR_INVALID_ARG;
+
+	free(tcv->data);
+	tcv->data = NULL;
 
 	return 0;
 }
