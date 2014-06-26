@@ -42,6 +42,7 @@ include(ExternalProject)
 option(BUILD_DEMO "Build Demonstration" ON)
 option(BUILD_TEST "Build Tests" OFF)
 option(PROFILE "Build with Profiling" OFF)
+option(PROFILE_LEAK "Build with address sanitizer" OFF)
 option(TEST_COVERAGE "Test Coverage" OFF)
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
@@ -49,9 +50,9 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
 endif()
 
 # How to call the executable - Some executable to run the lib
-SET(BINARY_NAME "LibTCV-Demo${SUFFIX}")
+SET(BINARY_NAME "libtcv-demo${SUFFIX}")
 # Name of binary compiled with coverage and unit-test framework
-SET(TEST_BINARY_NAME "Libtcv_test")
+SET(TEST_BINARY_NAME "libtcv_test")
 # Static Library containig all classes of project without main()
 SET(LIBRARY_NAME  "tcv${SUFFIX}")
 
@@ -137,6 +138,14 @@ elseif( ${CMAKE_CXX_COMPILER_ID} MATCHES "Clang" )
     SET(CMAKE_CXX_FLAGS   " ${CMAKE_CXX_FLAGS} --coverage ")
     SET(CMAKE_LINK_FLAGS  " ${CMAKE_LINK_FLAGS} --coverage ")
   endif()
+
+  if(PROFILE_LEAK)
+	message(STATUS "using clang/llvm address sanitizer")
+    SET(CMAKE_C_FLAGS     " ${CMAKE_C_FLAGS} -fsanitize=address ")
+    SET(CMAKE_CXX_FLAGS   " ${CMAKE_CXX_FLAGS}  -fsanitize=address ")
+    SET(CMAKE_LINK_FLAGS  " ${CMAKE_LINK_FLAGS} -fsanitize=address  ")
+  endif() 
+
 
 endif()
 
@@ -244,7 +253,7 @@ if(BUILD_TEST)
     # enable Cmake's make test  
     ENABLE_TESTING()
     # Call the testBinary with junit-xml output
-    add_test(junitout "./${TEST_BIN_DIR}/${TEST_BINARY_NAME}"
+    add_test(junitout "./${BIN_DIR}/${TEST_BINARY_NAME}"
 	--gtest_output=xml:gtestresults.xml )
 endif(BUILD_TEST)
 

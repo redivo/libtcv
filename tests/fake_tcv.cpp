@@ -31,12 +31,18 @@ bool FakeTCV::range_is_valid(tcv_dev_addr_t device, std::size_t offset,
 int FakeTCV::read(tcv_dev_addr_t device, std::uint8_t regaddr,
         std::uint8_t * data, std::size_t len) const
 {
+	size_t space;
+	int elements;
 	switch (device) {
 		case a0:
-			std::copy(eeprom.begin() + regaddr,
-				        eeprom.begin() + regaddr + len, data);
-			return (regaddr + len <= eeprom.size()) ?  len : eeprom.size()-regaddr;
-			break;
+			if(regaddr >= eeprom.size())
+				return -1;
+
+			elements = (len+regaddr) > eeprom.size() ? eeprom.size() - regaddr : len;
+
+			std::copy_n(eeprom.begin() + regaddr, elements, data);
+			return elements;
+
 		case dd: /* dd not implemented */
 		default:
 			return -1;
