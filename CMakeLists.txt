@@ -11,10 +11,12 @@
 # -DBUILD_TEST=OFF
 # -DPROFILE=Off
 # -DTEST_COVERAGE=Off
+# -DCMAKE_VERBOSE_MAKEFILE=On 
+# -DPROFILE_LEAK=On 
 #
 # To choose different compiler: (target)
-# cmake  -DCMAKE_C_COMPILER=ppc_6xx-gcc
-#        -DCMAKE_CXX_COMPILER=ppc_6xx-g++
+# cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ 
+#
 ##
 IF(NOT CMAKE_BUILD_TYPE)
    SET(CMAKE_BUILD_TYPE Debug
@@ -95,11 +97,9 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/tests/)
 # borrowed from http://stackoverflow.com/questions/4058565/check-gcc-minor-in-cmake
 execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion OUTPUT_VARIABLE COMPILER_VERSION)
 
-message(STATUS ${CMAKE_CXX_COMPILER_ID})
-
 # GCC specifics for C++11
 if(${CMAKE_CXX_COMPILER_ID} MATCHES "GNU" )
-  message(STATUS "Using gnu compiler")
+  message(STATUS "Using GNU compiler")
 
   if (COMPILER_VERSION VERSION_GREATER 4.7 OR GCC_VERSION VERSION_EQUAL 4.7)
 	message(STATUS "C++11 activated.")
@@ -116,10 +116,7 @@ if(${CMAKE_CXX_COMPILER_ID} MATCHES "GNU" )
   set(COVERAGE_LIB gcov)
 
   if(TEST_COVERAGE)
-	message(STATUS "setting GCC coverage flags")
-    SET(CMAKE_C_FLAGS     " ${CMAKE_C_FLAGS} -g -fprofile-arcs -ftest-coverage ")
-    SET(CMAKE_CXX_FLAGS   " ${CMAKE_CXX_FLAGS} -g -fprofile-arcs -ftest-coverage ")
-    SET(CMAKE_LINK_FLAGS  " ${CMAKE_LINK_FLAGS} -O0 -g ")
+	 SET(CMAKE_LINK_FLAGS  " ${CMAKE_LINK_FLAGS} -O0 -g ")
   endif()
 
 
@@ -133,21 +130,20 @@ elseif( ${CMAKE_CXX_COMPILER_ID} MATCHES "Clang" )
 
   # LLVM provides code coverage in libprofile_rt 
   if(TEST_COVERAGE)
-	message(STATUS "setting clang/llvm coverage flags")
-    SET(CMAKE_C_FLAGS     " ${CMAKE_C_FLAGS} --coverage ")
-    SET(CMAKE_CXX_FLAGS   " ${CMAKE_CXX_FLAGS} --coverage ")
-    SET(CMAKE_LINK_FLAGS  " ${CMAKE_LINK_FLAGS} --coverage ")
+      message(STATUS "setting clang/llvm coverage flags")
+      SET(CMAKE_LINK_FLAGS  " ${CMAKE_LINK_FLAGS} --coverage ")
   endif()
+endif()
 
-  if(PROFILE_LEAK)
-	message(STATUS "using clang/llvm address sanitizer")
+
+if(PROFILE_LEAK)
+    message(STATUS "Building with address sanitizer")
     SET(CMAKE_C_FLAGS     " ${CMAKE_C_FLAGS} -fsanitize=address ")
     SET(CMAKE_CXX_FLAGS   " ${CMAKE_CXX_FLAGS}  -fsanitize=address ")
     SET(CMAKE_LINK_FLAGS  " ${CMAKE_LINK_FLAGS} -fsanitize=address  ")
-  endif() 
+endif() 
 
 
-endif()
 
 # Threading library for gtest
 find_library(THREAD_LIB pthread)
@@ -235,20 +231,22 @@ if(BUILD_TEST)
     #Could also be your own main.cpp
     set(RUN_TEST_MAIN ${binary_dir}/libgtest_main.a)
 
+    if(TEST_COVERAGE)
+        SET(CMAKE_C_FLAGS     " -g -pg -O0 --coverage ${CMAKE_C_FLAGS} ")
+        SET(CMAKE_CXX_FLAGS   " -g -pg -O0 --coverage ${CMAKE_CXX_FLAGS}  ")
+    endif()
+
     # Note: we do not add the project as binary library (libtransmogrify.a)
     #       to build with debug / coverage flags
     add_executable(${TEST_BINARY_NAME} ${LIB_SRCS} ${TEST_HARNESS_SRC} )
     add_dependencies(${TEST_BINARY_NAME} googletest)
 
+    TARGET_LINK_LIBRARIES(${TEST_BINARY_NAME}  ${COVERAGE_LIB})
     SET_TARGET_PROPERTIES(${TEST_BINARY_NAME}  PROPERTIES COMPILE_DEFINITIONS "TESTING" )
     SET_TARGET_PROPERTIES(${TEST_BINARY_NAME}  PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${BIN_DIR})
 
     # Add Test-Framework and main() to execute test
     TARGET_LINK_LIBRARIES(${TEST_BINARY_NAME} ${RUN_TEST_MAIN} ${UNIT_TEST_LIB} ${THREAD_LIB})
-
-    if(TEST_COVERAGE)
-        TARGET_LINK_LIBRARIES(${TEST_BINARY_NAME}  ${COVERAGE_LIB})
-    endif()
       
     # enable Cmake's make test  
     ENABLE_TESTING()

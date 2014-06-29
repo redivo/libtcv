@@ -67,19 +67,6 @@ TEST_F(TestFixtureClass, doubleInit)
 	ASSERT_EQ(0, ret);
 }
 
-TEST_F(TestFixtureClass, doubleDestroy)
-{
-	auto mtcv = get_tcv(1);
-	tcv_t *tcv = mtcv->get_ctcv();
-	int ret = tcv_init(tcv);
-	ASSERT_EQ(0, ret);
-	ret = tcv_destroy(tcv);
-	ASSERT_EQ(0, ret);
-	/* should be invalid */
-	ret = tcv_destroy(tcv);
-	ASSERT_EQ(TCV_ERR_INVALID_ARG, ret);
-}
-
 
 TEST_F(TestFixtureClass, identSFP)
 {
@@ -285,4 +272,18 @@ TEST_F(TestFixtureClass, getVendorRomSize)
 }
 
 
-
+/**
+ * Put this test at the end since asan will bail out
+ */
+TEST_F(TestFixtureClass, doubleDestroy)
+{
+	auto mtcv = get_tcv(1);
+	tcv_t *tcv = mtcv->get_ctcv();
+	int ret = tcv_init(tcv);
+	ASSERT_EQ(0, ret);
+	ret = tcv_destroy(tcv);
+	ASSERT_EQ(0, ret);
+	/* should be invalid */
+	ret = tcv_destroy(tcv); //really bad use after free()!
+	ASSERT_EQ(TCV_ERR_INVALID_ARG, ret);
+}
