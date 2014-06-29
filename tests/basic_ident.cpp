@@ -9,6 +9,7 @@
 #include <vector>
 #include <string>
 #include <cstdint>
+#include <iostream>
 
 extern "C"{
 #include "libtcv/tcv.h"
@@ -20,15 +21,18 @@ extern "C"{
 using namespace std;
 using namespace TestDoubles;
 
-class TestFixtureClass: public ::testing::Test {
-public:
-	TestFixtureClass(){
-		add_tcv(1, make_shared<FakeSFP>());
-		add_tcv(3, make_shared<FakeSFP>());
-	};
-    ~TestFixtureClass(){
-    	clear_tcvs();
-    }
+class TestFixtureClass : public ::testing::Test {
+	public:
+	TestFixtureClass()
+	{
+		add_tcv(1, make_shared<FakeSFP>(1, i2c_read, i2c_write));
+		add_tcv(3, make_shared<FakeSFP>(3, i2c_read, i2c_write));
+	}
+
+	~TestFixtureClass()
+	{
+		clear_tcvs();
+	}
 };
 
 
@@ -53,13 +57,36 @@ TEST_F(TestFixtureClass, readBeyond)
 
 }
 
+TEST_F(TestFixtureClass, doubleInit)
+{
+	auto mtcv = get_tcv(1);
+	tcv_t *tcv = mtcv->get_ctcv();
+	int ret = tcv_init(tcv);
+	ASSERT_EQ(0, ret);
+	ret = tcv_init(tcv);
+	ASSERT_EQ(0, ret);
+}
+
+TEST_F(TestFixtureClass, doubleDestroy)
+{
+	auto mtcv = get_tcv(1);
+	tcv_t *tcv = mtcv->get_ctcv();
+	int ret = tcv_init(tcv);
+	ASSERT_EQ(0, ret);
+	ret = tcv_destroy(tcv);
+	ASSERT_EQ(0, ret);
+	/* should be invalid */
+	ret = tcv_destroy(tcv);
+	ASSERT_EQ(TCV_ERR_INVALID_ARG, ret);
+}
+
+
 TEST_F(TestFixtureClass, identSFP)
 {
 	auto mtcv = get_tcv(1);
 	tcv_t *tcv = mtcv->get_ctcv();
-	int ret = tcv_init(tcv, 1, i2c_read, i2c_write);
-	EXPECT_EQ(ret, 0);
-	EXPECT_EQ(tcv->fun->get_itendifier(tcv), TCV_TYPE_SFP);
+	EXPECT_EQ(0, tcv_init(tcv));
+	EXPECT_EQ(TCV_TYPE_SFP, tcv_get_identifier(tcv));
 }
 
 /* Test update vendor oui */
@@ -69,13 +96,13 @@ TEST_F(TestFixtureClass, getVendorOUI)
 	tcv_t *tcv = mtcv->get_ctcv();
 	vector<uint8_t> vid = {0x01, 0x02, 0x03};
 	/*write 3 bytes to eeprom */
-	EXPECT_EQ(mtcv->manip_eeprom(37, vid), 3);
+	mtcv->manip_eeprom(37, vid);
 	// Not initialized, should fail
-	EXPECT_NE(tcv->fun->get_vendor_oui(tcv), 0x010203);
+	EXPECT_NE(tcv_get_vendor_oui(tcv), 0x010203);
 
-	int ret = tcv_init(tcv, 1, i2c_read, i2c_write);
-	EXPECT_EQ(ret, 0);
-	EXPECT_EQ(tcv->fun->get_vendor_oui(tcv), 0x010203);
+	tcv_init(tcv);
+
+	EXPECT_EQ(0x010203,tcv_get_vendor_oui(tcv));
 }
 
 
@@ -88,14 +115,14 @@ TEST_F(TestFixtureClass, getVendorName)
 	char buf[128];
 	/*write the name to eeprom */
 	EXPECT_EQ(mtcv->manip_eeprom(20, name), name.length());
-	tcv_init(tcv, 1, i2c_read, i2c_write);
-	EXPECT_EQ(tcv->fun->get_vendor_name(tcv,buf),0);
+	tcv_init(tcv);
+	EXPECT_EQ(0,tcv_get_vendor_name(tcv,buf));
 	EXPECT_STREQ(buf, name.c_str());
 
 	name = "Sadia";
 	EXPECT_EQ(mtcv->manip_eeprom(20, name), name.length());
-	tcv_init(tcv, 1, i2c_read, i2c_write);
-	EXPECT_EQ(tcv->fun->get_vendor_name(tcv,buf),0);
+	tcv_init(tcv);
+	EXPECT_EQ(0,tcv_get_vendor_name(tcv,buf));
 	// Expect it to fail - eeprom should contain junk from last test
 	EXPECT_STRNE(buf, name.c_str());
 }
@@ -109,15 +136,15 @@ TEST_F(TestFixtureClass, getVendorSN)
 	char buf[128];
 	/*write the name to eeprom */
 	EXPECT_EQ(mtcv->manip_eeprom(40, pn), pn.length());
-	tcv_init(tcv, 1, i2c_read, i2c_write);
-	EXPECT_EQ(tcv->fun->get_vendor_part_number(tcv,buf),0);
+	tcv_init(tcv);
+	EXPECT_EQ(tcv_get_vendor_part_number(tcv,buf),0);
 	EXPECT_STREQ(buf, pn.c_str());
 
 	/* Set invalid PN */
 	vector<uint8_t> invalid_pn(6,0x00);
 	EXPECT_EQ(mtcv->manip_eeprom(40, invalid_pn), invalid_pn.size());
-	tcv_init(tcv, 1, i2c_read, i2c_write);
-	EXPECT_EQ(tcv->fun->get_vendor_part_number(tcv,buf),0);
+	tcv_init(tcv);
+	EXPECT_EQ(tcv_get_vendor_part_number(tcv,buf),0);
 	EXPECT_STRNE(buf, 0);
 }
 
@@ -130,8 +157,8 @@ TEST_F(TestFixtureClass, VendorRev)
 	char buf[128];
 	/*write the name to eeprom */
 	EXPECT_EQ(mtcv->manip_eeprom(56, rev), rev.length());
-	tcv_init(tcv, 1, i2c_read, i2c_write);
-	int ret = tcv->fun->get_vendor_revision(tcv,buf);
+	tcv_init(tcv);
+	int ret = tcv_get_vendor_revision(tcv,buf);
 	EXPECT_EQ(ret,0);
 	EXPECT_STREQ(buf, rev.c_str());
 }
@@ -145,9 +172,9 @@ TEST_F(TestFixtureClass, extendedIdent)
 	  * [...]The field should be  set to 04h for all SFP modules indicating
 	  * two-wire interface ID module definition (SFF-8972)
 	  */
-	EXPECT_EQ( mtcv->manip_eeprom(1, vector<uint8_t>(1, 0x4)), 1);
-	tcv_init(tcv, 1, i2c_read, i2c_write);
-	EXPECT_EQ(tcv->fun->get_ext_itendifier(tcv),0x04);
+	mtcv->manip_eeprom(1, vector<uint8_t>(1, 0x4));
+	tcv_init(tcv);
+	EXPECT_EQ(0x04,tcv_get_ext_identifier(tcv));
 }
 
 
@@ -158,9 +185,9 @@ TEST_F(TestFixtureClass, diagnosticsTypeValid)
 	tcv_t *tcv = mtcv->get_ctcv();
 	uint8_t diag_caps = 0x60;
 	tcv_diagnostic_type_t diags;
-	EXPECT_EQ( mtcv->manip_eeprom(92, vector<uint8_t>(1, diag_caps)), 1);
-	tcv_init(tcv, 1, i2c_read, i2c_write);
-	EXPECT_EQ(tcv->fun->get_diagnostic_type(tcv, &diags),0);
+	mtcv->manip_eeprom(92, vector<uint8_t>(1, diag_caps));
+	tcv_init(tcv);
+	EXPECT_EQ(0, tcv_get_diagnostic_type(tcv, &diags));
 
 	EXPECT_EQ(diags.bits.address_change_required, 0);
 	EXPECT_EQ(diags.bits.pwr_measurement_type, 0);
@@ -177,9 +204,9 @@ TEST_F(TestFixtureClass, diagnosticsTypeInValid)
 	tcv_t *tcv = mtcv->get_ctcv();
 	uint8_t diag_caps = 0xFF;
 	tcv_diagnostic_type_t diags;
-	EXPECT_EQ( mtcv->manip_eeprom(92, vector<uint8_t>(1, diag_caps)), 1);
-	tcv_init(tcv, 1, i2c_read, i2c_write);
-	EXPECT_EQ(tcv->fun->get_diagnostic_type(tcv, &diags),0);
+	mtcv->manip_eeprom(92, vector<uint8_t>(1, diag_caps));
+	tcv_init(tcv);
+	EXPECT_EQ(0, tcv_get_diagnostic_type(tcv, &diags));
 	/* Function should truncate invalid crap */
 	EXPECT_EQ(diags.bmp, 0x1F);
 }
@@ -192,10 +219,10 @@ TEST_F(TestFixtureClass, enhancedOptionsValid)
 	tcv_t *tcv = mtcv->get_ctcv();
 	uint8_t raw = 0x5A;
 	tcv_enhanced_options_type_t eopts;
-	EXPECT_EQ( mtcv->manip_eeprom(93, vector<uint8_t>(1, raw)), 1);
-	tcv_init(tcv, 1, i2c_read, i2c_write);
-	EXPECT_EQ(tcv->fun->get_enhanced_options(tcv, &eopts),0);
-	EXPECT_EQ(eopts.bmp, 0x2D);
+	mtcv->manip_eeprom(93, vector<uint8_t>(1, raw));
+	tcv_init(tcv);
+	EXPECT_EQ(0, tcv_get_enhanced_options(tcv, &eopts));
+	EXPECT_EQ(0x2D,eopts.bmp);
 }
 
 
@@ -206,10 +233,10 @@ TEST_F(TestFixtureClass, enhancedOptionsInValid)
 	tcv_t *tcv = mtcv->get_ctcv();
 	uint8_t raw = 0xFF;
 	tcv_enhanced_options_type_t eopts;
-	EXPECT_EQ( mtcv->manip_eeprom(93, vector<uint8_t>(1, raw)), 1);
-	tcv_init(tcv, 1, i2c_read, i2c_write);
-	EXPECT_EQ(tcv->fun->get_enhanced_options(tcv, &eopts),0);
-	EXPECT_EQ(eopts.bmp, 0x7F);
+	mtcv->manip_eeprom(93, vector<uint8_t>(1, raw));
+	tcv_init(tcv);
+	EXPECT_EQ(0, tcv_get_enhanced_options(tcv, &eopts));
+	EXPECT_EQ(0x7F,eopts.bmp);
 }
 
 
@@ -218,22 +245,43 @@ TEST_F(TestFixtureClass, getVendorRom)
 {
 	auto mtcv = get_tcv(1);
 	tcv_t *tcv = mtcv->get_ctcv();
+
 	string vrom = "A.C.M.E";
-	EXPECT_EQ(mtcv->manip_eeprom(96, vrom), vrom.length());
 
-	tcv_init(tcv, 1, i2c_read, i2c_write);
-	const uint8_t* buff = tcv->fun->get_vendor_rom(tcv);
+	mtcv->manip_eeprom(96, vrom);
 
-	EXPECT_STREQ(reinterpret_cast<const char*>(buff),vrom.c_str());
-	EXPECT_EQ(tcv->fun->get_vendor_rom_size(tcv), 32);
+	tcv_init(tcv);
+	const uint8_t* buff = tcv_get_vendor_rom(tcv);
+	string res(reinterpret_cast<const char*>(buff),vrom.size());
+	EXPECT_STREQ(vrom.c_str(),res.c_str());
 }
+
+
+/* Test access to extended rom section */
+TEST_F(TestFixtureClass, get8979Rom)
+{
+	auto mtcv = get_tcv(1);
+	tcv_t *tcv = mtcv->get_ctcv();
+
+	string rom = "Hallo Welt!";
+	mtcv->manip_eeprom(128, rom);
+
+	tcv_init(tcv);
+	const uint8_t* buff = tcv_get_8079_rom(tcv);
+	string res(reinterpret_cast<const char*>(buff),128);
+
+	EXPECT_TRUE(std::equal(rom.begin(),rom.end(),res.begin()));
+}
+
 
 /* Test get_vendor_rom_size() */
 TEST_F(TestFixtureClass, getVendorRomSize)
 {
 	auto mtcv = get_tcv(1);
 	tcv_t *tcv = mtcv->get_ctcv();
-	EXPECT_EQ(tcv->fun->get_vendor_rom_size(tcv), 32);
+	tcv_init(tcv);
+
+	EXPECT_EQ(static_cast<size_t>(32), tcv_get_vendor_rom_size(tcv));
 }
 
 

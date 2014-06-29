@@ -262,7 +262,7 @@ endif(BUILD_TEST)
 #-------------------------------------------------------------------------------
 add_executable(${BINARY_NAME} ${DEMO_SRCS})
 SET_TARGET_PROPERTIES(${BINARY_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${BIN_DIR})
-TARGET_LINK_LIBRARIES(${BINARY_NAME} ${LIBRARY_NAME} ) # Final Linkage without any helper libs
+TARGET_LINK_LIBRARIES(${BINARY_NAME} ${LIBRARY_NAME} ${THREAD_LIB} ) # Final Linkage without any helper libs
 
 
 ################################################################################

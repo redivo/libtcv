@@ -8,8 +8,10 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "libtcv/tcv.h"
+#include "libtcv/tcv_internal.h"
 #include "libtcv/sfp.h"
+
+
 
 /******************************************************************************/
 
@@ -152,19 +154,44 @@
 #define BASIC_INFO_REG_RESERVED							128
 #define BASIC_INFO_REG_RESERVED_SIZE					128
 
+
+
+/******************************************************************************/
+int sfp_init(tcv_t* tcv){
+	int ret;
+	sfp_data_t * sfp_data;
+	const uint8_t  FIXED_DATA_PAGE = 0x50;
+
+	sfp_data = malloc(sizeof(sfp_data_t));
+	if(!sfp_data){
+		return TCV_ERR_GENERIC;
+	}
+	ret = tcv->read(tcv->index, FIXED_DATA_PAGE, 0, sfp_data->a0, sizeof(sfp_data->a0));
+	if(ret < 0 ){
+		/*
+		 * Make sure we free after read-error
+		 * smart pointers would be really nice...
+		 */
+		free(sfp_data);
+		return ret;
+	}
+	sfp_data->type  = TCV_TYPE_SFP;
+	tcv->data = sfp_data;
+	tcv->fun = &sfp_funcs;
+	tcv->initialized = true;
+	return 0;
+}
+
 /******************************************************************************/
 
-int sfp_get_itendifier(tcv_t *tcv)
+int sfp_get_identifier(tcv_t *tcv)
 {
-	if (tcv == NULL || tcv->data == NULL)
-		return TCV_ERR_INVALID_ARG;
-
 	return ((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_IDENTIFIER];
 }
 
 /******************************************************************************/
 
-int sfp_get_ext_itendifier(tcv_t *tcv)
+int sfp_get_ext_identifier(tcv_t *tcv)
 {
 	if (tcv == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
@@ -1218,8 +1245,8 @@ const uint8_t* sfp_get_8079_rom(tcv_t *tcv)
  * Member functions for sfp modules
  */
 const struct tcv_functions sfp_funcs = {
-	.get_itendifier = sfp_get_itendifier,
-	.get_ext_itendifier = sfp_get_ext_itendifier,
+	.get_identifier = sfp_get_identifier,
+	.get_ext_identifier = sfp_get_ext_identifier,
 	.get_connector = sfp_get_connector,
 	.get_vendor_name = sfp_get_vendor_name,
 	.get_vendor_oui = sfp_get_vendor_oui,
