@@ -876,6 +876,30 @@ const uint8_t* tcv_get_8079_rom(tcv_t *tcv);
 
 /******************************************************************************/
 
+/**
+ * \brief	Read raw data from transceiver
+ * 			use to access non-standardized registers and devices
+ * \param	tcv	Pointer to transceiver structure
+ * @param devaddr device address (0xA0, 0xA2, 0xAC...)
+ * @param regaddr register offset0
+ * @param data  (out) data read
+ * @param len size of data
+ * @return length read or errorcode
+ */
+int tcv_read(tcv_t *tcv, uint8_t devaddr, uint8_t regaddr, uint8_t* data, size_t len);
+
+/**
+ * \brief	Write raw data from transceiver
+ * 			use to access non-standardized registers and devices
+ * \param	tcv	Pointer to transceiver structure
+ * @param devaddr device address (0xA0, 0xA2, 0xAC...)
+ * @param regaddr register offset0
+ * @param data  (in) data write
+ * @param len size of data
+ * @return length read or errorcode
+ */
+int tcv_write(tcv_t *tcv, uint8_t devaddr, uint8_t regaddr, uint8_t* data, size_t len);
+
 
 #ifdef __cplusplus
 } /*extern "C" */

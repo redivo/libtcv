@@ -839,3 +839,37 @@ const uint8_t* tcv_get_8079_rom(tcv_t *tcv)
 
 }
 
+/******************************************************************************/
+
+int tcv_read(tcv_t *tcv, uint8_t devaddr, uint8_t regaddr, uint8_t* data, size_t len)
+{
+	int ret = TCV_ERR_NOT_INITIALIZED;
+
+	if (!tcv_check_and_lock_ok(tcv) || !data)
+		return TCV_ERR_INVALID_ARG;
+
+	if (tcv_is_initialized(tcv)) {
+		ret = tcv->fun->raw_read(tcv, devaddr, regaddr, data, len);
+	}
+
+	tcv_unlock(tcv);
+	return ret;
+}
+
+/******************************************************************************/
+
+int tcv_write(tcv_t *tcv, uint8_t devaddr, uint8_t regaddr, uint8_t* data, size_t len)
+{
+	int ret = TCV_ERR_NOT_INITIALIZED;
+
+	if (!tcv_check_and_lock_ok(tcv) || !data)
+		return TCV_ERR_INVALID_ARG;
+
+	if (tcv_is_initialized(tcv)) {
+		ret = tcv->fun->raw_write(tcv, devaddr, regaddr, data, len);
+	}
+
+	tcv_unlock(tcv);
+	return ret;
+}
+

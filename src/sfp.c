@@ -1234,8 +1234,26 @@ const uint8_t* sfp_get_8079_rom(tcv_t *tcv)
 	return &((sfp_data_t*) tcv->data)->a0[SFF_8079_ROM_OFFSET];
 }
 
+/******************************************************************************/
+int sfp_read(tcv_t* tcv, uint8_t devaddr, uint8_t regaddr, uint8_t* data, size_t len)
+{
+	//TODO sanity check
+	return tcv->read(tcv->index, devaddr, regaddr, data, len);
+}
 
 /******************************************************************************/
+int sfp_write(tcv_t* tcv, uint8_t devaddr, uint8_t regaddr, uint8_t* data, size_t len)
+{
+	size_t nbytes = len;
+
+	if (regaddr < 96)
+		return TCV_ERR_INVALID_ARG;
+
+	return tcv->write(tcv->index, devaddr, regaddr, data, len);
+}
+
+/******************************************************************************/
+
 
 /**
  * Member functions for sfp modules
@@ -1283,4 +1301,6 @@ const struct tcv_functions sfp_funcs = {
 	.get_vendor_rom = sfp_get_vendor_rom,
 	.get_vendor_rom_size = sfp_get_vendor_rom_size,
 	.get_8079_rom = sfp_get_8079_rom,
+	.raw_read = sfp_read,
+	.raw_write = sfp_write,
 };
