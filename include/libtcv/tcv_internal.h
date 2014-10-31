@@ -87,6 +87,8 @@ struct tcv_functions {
 	int (*calculate_cc_base)(tcv_t *);
 	int (*get_implemented_options)(tcv_t *, tcv_implemented_options_t *);
 	const uint8_t* (*get_8079_rom)(tcv_t *);
+	int (*raw_read)(tcv_t *, uint8_t, uint8_t, uint8_t*, size_t);
+	int (*raw_write)(tcv_t *, uint8_t, uint8_t, uint8_t*, size_t);
 };
 /******************************************************************************/
 
