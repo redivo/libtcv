@@ -57,7 +57,7 @@
  | 15      | 1    | Length (SMF)                   | --    |
  | 16      | 1    | Length (50um)                  | --    |
  | 17      | 1    | Length (62.5um)                | --    |
- | 18      | 1    | Length (OM4 or copper capable) | --    |
+ | 18      | 1    | Length (ACT_CABL or copper capable) | --    |
  | 19      | 1    | Length (OM3)                   | --    |
  | 20-35   | 16   | Vendor name                    | --    |
  | 36      | 1    | Transceiver                    | 3.5   |
@@ -116,8 +116,8 @@
 #define BASIC_INFO_REG_LENGTH_OM1_10M					17
 #define BASIC_INFO_REG_LENGTH_OM1_10M_SIZE				1
 
-#define BASIC_INFO_REG_LENGTH_OM4_10M_COPPER_1M			18
-#define BASIC_INFO_REG_LENGTH_OM4_10M_COPPER_1M_SIZE	1
+#define BASIC_INFO_REG_LENGTH_ACT_CABL_COPPER_1M		18
+#define BASIC_INFO_REG_LENGTH_ACT_CABL_COPPER_1M_SIZE	1
 
 #define BASIC_INFO_REG_LENGTH_OM3_10M					19
 #define BASIC_INFO_REG_LENGTH_OM3_10M_SIZE				1
@@ -726,30 +726,75 @@ int sfp_get_om1_length(tcv_t *tcv)
 }
 
 /******************************************************************************/
-static bool sfp_is_optical(tcv_t *tcv)
+static bool sfp_get_medium(tcv_t *tcv)
 {
-	// TODO
-	if (tcv)
-		return 1;
-
-	return 1;
-}
-
-int sfp_get_om4_length_copper_length(tcv_t *tcv)
-{
-	unsigned char length;
+	int ret;
+	int connector = sfp_get_connector(tcv);
+	sfp_plus_cable_technology_t cable_tech;
 
 	if (tcv == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
 
-	/* Normalize length to meters. Optical link is measured in units of 10 meters
-	 * and copper link is measured in units of 1 meter. */
-	if (sfp_is_optical(tcv))
-		length = ((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_LENGTH_OM4_10M_COPPER_1M] * 10;
-	else
-		length = ((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_LENGTH_OM4_10M_COPPER_1M];
+	/* Try to define it by looking for connector type */
+	switch (connector) {
+		/* SFF-8072:  Note that 01h to 05h are not SFP compatibe */
+		case TCV_CONN_STYLE_1_COPPER:
+		case TCV_CONN_STYLE_2_COPPER:
+		case TCV_CONN_BNC_TNC:
+		case TCV_CONN_COAXIAL_HEADERS:
+		/* SFP-Compatible Electrical connectors */
+		case TCV_CONN_HSSDC_II:
+		case TCV_CONN_COPPTER_PIGTAIL:
+		case TCV_CONN_RJ45:
+			return TCV_ELECTRICAL_MEDIUM;
 
-	return length == 0 ? TCV_ERR_OM4_LENGTH_NOT_DEFINED : length;
+		/* SFP -compatible optical connectors */
+		case TCV_CONN_SC: /* not compatible but optical */
+		case TCV_CONN_FIBER_JACK:
+		case TCV_CONN_OPTICAL_PIGTAIL:
+		case TCV_CONN_LC:
+		case TCV_CONN_MT_RJ:
+		case TCV_CONN_MU:
+		case TCV_CONN_SG:
+		case TCV_CONN_MPO_PARALLEL_OPTIC:
+			return TCV_OPTICAL_MEDIUM;
+
+		/* Electrical TCVs are bad citizens, they usually respond "unknown".
+		 * In this case, let's try another war to discover it */
+		case TCV_CONN_UNKNOWN:
+			default:
+	}
+
+	/* Try to get it by fiber link length */
+	if (sfp_get_sm_length(tcv) > 0
+			|| sfp_get_om1_length(tcv) > 0
+			|| sfp_get_om2_length(tcv) > 0
+			|| sfp_get_om3_length(tcv) > 0)
+		return TCV_OPTICAL_MEDIUM;
+
+	/* Try to get it by copper length */
+	if ((ret = sfp_get_sfp_plus_cable_technology(tcv, cable_tech)) < 0)
+		return ret;
+
+	if (sfp_get_act_cabl_or_copper_length(tcv) > 0
+			&& !cable_tech.bits.active_cable)
+		return TCV_ELECTRICAL_MEDIUM;
+
+	/* Try to get it by wave length */
+	if (sfp_get_wavelength(tcv) > 0)
+		return TCV_OPTICAL_MEDIUM;
+
+	return TCV_UNKNOWN_MEDIUM;
+}
+
+/******************************************************************************/
+
+int sfp_get_act_cabl_or_copper_length(tcv_t *tcv)
+{
+	if (tcv == NULL || tcv->data == NULL)
+		return TCV_ERR_INVALID_ARG;
+
+	return ((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_LENGTH_ACT_CABL_COPPER_1M];
 }
 
 /******************************************************************************/
@@ -1310,7 +1355,7 @@ const struct tcv_functions sfp_funcs = {
 	.get_om1_length = sfp_get_om1_length,
 	.get_om2_length = sfp_get_om2_length,
 	.get_om3_length = sfp_get_om3_length,
-	.get_om4_copper_length = sfp_get_om4_length_copper_length,
+	.get_act_cabl_copper_length = sfp_get_act_cabl_or_copper_length,
 	.get_wave_len =  sfp_get_wavelength,
 	.get_passive_cable_compliance = sfp_get_passive_cable_compliance,
 	.get_active_cable_compliance = sfp_get_active_cable_compliance,
