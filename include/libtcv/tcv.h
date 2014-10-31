@@ -24,6 +24,8 @@
  */
 
 /*
+ * Public Header to include in Client programs
+ *
  * NOTE
  * This file is based on SFF-8472 rev11.3 and INF-8077i rev4.5.
  * It's an MSA translation.

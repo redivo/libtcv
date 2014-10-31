@@ -32,7 +32,7 @@
 #ifndef __LIBTCV_SFP_H__
 #define __LIBTCV_SFP_H__
 
-#include "tcv.h"
+#include "libtcv/tcv.h"
 
 /******************************************************************************/
 /**
@@ -47,13 +47,23 @@ typedef struct {
 	uint8_t ac[256];	//! Internal device 0xAc (Internal PHY)
 } sfp_data_t;
 
+
+/******************************************************************************/
+
+/**
+ * \brief initialization function for sfp_data
+ * \param tcv partially initialized transceiver
+ * \return 0 if successfully initialized; error code otherwise
+ */
+int sfp_init(tcv_t* tcv);
+
 /******************************************************************************/
 /**
  * \brief	Inform the transceiver type identifier.
  * \param	tcv	Pointer to transceiver structure
  * \return	Transceiver type if ok; code error otherwise
  */
-int sfp_get_itendifier(tcv_t *tcv);
+int sfp_get_identifier(tcv_t *tcv);
 
 /******************************************************************************/
 /**
@@ -61,7 +71,7 @@ int sfp_get_itendifier(tcv_t *tcv);
  * \param	tcv	Pointer to transceiver structure
  * \return	Extended transceiver type if ok; code error otherwise
  */
-int sfp_get_ext_itendifier(tcv_t *tcv);
+int sfp_get_ext_identifier(tcv_t *tcv);
 
 /******************************************************************************/
 /**

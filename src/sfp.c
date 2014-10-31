@@ -33,8 +33,10 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "libtcv/tcv.h"
+#include "libtcv/tcv_internal.h"
 #include "libtcv/sfp.h"
+
+
 
 /******************************************************************************/
 
@@ -177,19 +179,44 @@
 #define BASIC_INFO_REG_RESERVED							128
 #define BASIC_INFO_REG_RESERVED_SIZE					128
 
+
+
+/******************************************************************************/
+int sfp_init(tcv_t* tcv){
+	int ret;
+	sfp_data_t * sfp_data;
+	const uint8_t  FIXED_DATA_PAGE = 0x50;
+
+	sfp_data = malloc(sizeof(sfp_data_t));
+	if(!sfp_data){
+		return TCV_ERR_GENERIC;
+	}
+	ret = tcv->read(tcv->index, FIXED_DATA_PAGE, 0, sfp_data->a0, sizeof(sfp_data->a0));
+	if(ret < 0 ){
+		/*
+		 * Make sure we free after read-error
+		 * smart pointers would be really nice...
+		 */
+		free(sfp_data);
+		return ret;
+	}
+	sfp_data->type  = TCV_TYPE_SFP;
+	tcv->data = sfp_data;
+	tcv->fun = &sfp_funcs;
+	tcv->initialized = true;
+	return 0;
+}
+
 /******************************************************************************/
 
-int sfp_get_itendifier(tcv_t *tcv)
+int sfp_get_identifier(tcv_t *tcv)
 {
-	if (tcv == NULL || tcv->data == NULL)
-		return TCV_ERR_INVALID_ARG;
-
 	return ((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_IDENTIFIER];
 }
 
 /******************************************************************************/
 
-int sfp_get_ext_itendifier(tcv_t *tcv)
+int sfp_get_ext_identifier(tcv_t *tcv)
 {
 	if (tcv == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
@@ -1200,14 +1227,51 @@ int sfp_calculate_cc_ext(tcv_t *tcv)
 	return (sum & 0xff);
 }
 
+
+/******************************************************************************/
+
+const uint8_t* sfp_get_vendor_rom(tcv_t *tcv)
+{
+	const size_t VENDOR_ROM_OFFSET = 96;
+
+	if (tcv == NULL || tcv->data == NULL)
+		return NULL;
+
+	return &((sfp_data_t*) tcv->data)->a0[VENDOR_ROM_OFFSET];
+}
+
+/******************************************************************************/
+
+size_t sfp_get_vendor_rom_size(tcv_t *tcv)
+{
+	if (tcv == NULL || tcv->data == NULL)
+		return 0;
+
+	return 32;
+}
+
+/******************************************************************************/
+
+const uint8_t* sfp_get_8079_rom(tcv_t *tcv)
+{
+
+	const size_t SFF_8079_ROM_OFFSET = 128;
+
+	if (tcv == NULL || tcv->data == NULL)
+		return NULL;
+
+	return &((sfp_data_t*) tcv->data)->a0[SFF_8079_ROM_OFFSET];
+}
+
+
 /******************************************************************************/
 
 /**
  * Member functions for sfp modules
  */
 const struct tcv_functions sfp_funcs = {
-	.get_itendifier = sfp_get_itendifier,
-	.get_ext_itendifier = sfp_get_ext_itendifier,
+	.get_identifier = sfp_get_identifier,
+	.get_ext_identifier = sfp_get_ext_identifier,
 	.get_connector = sfp_get_connector,
 	.get_vendor_name = sfp_get_vendor_name,
 	.get_vendor_oui = sfp_get_vendor_oui,
@@ -1245,4 +1309,7 @@ const struct tcv_functions sfp_funcs = {
 	.get_enhanced_options = sfp_get_enhance_options,
 	.get_cc_ext = sfp_get_cc_ext,
 	.calculate_cc_ext = sfp_calculate_cc_ext,
+	.get_vendor_rom = sfp_get_vendor_rom,
+	.get_vendor_rom_size = sfp_get_vendor_rom_size,
+	.get_8079_rom = sfp_get_8079_rom,
 };

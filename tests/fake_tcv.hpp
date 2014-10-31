@@ -37,10 +37,11 @@
 
 #include <cstdint>
 #include <iostream>
+#include <vector>
 
-extern "C" {
+
 #include <libtcv/tcv.h>
-}
+#include "fake_hw_i2c.hpp"
 
 namespace TestDoubles {
 
@@ -57,10 +58,11 @@ enum tcv_dev_addr_t
 class FakeTCV
 {
 	public:
-		FakeTCV()
+		FakeTCV(int index, i2c_read_cb_t read, i2c_write_cb_t write)
 				: eeprom(PAGESIZE, 0xFF)
 		{
 			eeprom[0] = TCV_TYPE_UNKNOWN;
+			tcv = tcv_create(index, i2c_read, i2c_write);
 		}
 		;
 
@@ -72,15 +74,16 @@ class FakeTCV
 
 		virtual ~FakeTCV()
 		{
+			tcv_destroy(tcv);
 		}
-		;
+
 
 		virtual bool range_is_valid(tcv_dev_addr_t device, std::size_t offset,
 		        std::size_t size) const;
 
 		tcv_t* get_ctcv()
 		{
-			return &tcv;
+			return tcv;
 		}
 		;
 
@@ -107,7 +110,7 @@ class FakeTCV
 
 	protected:
 		std::vector<std::uint8_t> eeprom;
-		tcv_t tcv;
+		tcv_t* tcv;
 };
 
 /**
@@ -116,8 +119,8 @@ class FakeTCV
 class FakeSFP: public FakeTCV
 {
 	public:
-		FakeSFP()
-				: diagnostics_size(256)
+		FakeSFP(int index, i2c_read_cb_t read, i2c_write_cb_t write)
+				: FakeTCV(index,read,write), diagnostics_size(256)
 		{
 			eeprom[0] = TCV_TYPE_SFP;
 			/* Digital diagnostics, internally calibrated, rx_pwr=avg */
@@ -134,7 +137,7 @@ class FakeSFP: public FakeTCV
 class FakeXFP: public FakeTCV
 {
 	public:
-		FakeXFP()
+		FakeXFP(int index, i2c_read_cb_t read, i2c_write_cb_t write): FakeTCV(index,read,write)
 		{
 			eeprom[0] = TCV_TYPE_XFP;
 		}

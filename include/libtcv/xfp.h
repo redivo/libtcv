@@ -31,7 +31,7 @@
 #ifndef __LIBTCV_XFP_H__
 #define __LIBTCV_XFP_H__
 
-#include "tcv.h"
+#include "libtcv/tcv_internal.h"
 
 
 /**
