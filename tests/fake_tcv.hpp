@@ -108,6 +108,14 @@ class FakeTCV
 		 */
 		int manip_eeprom(std::size_t index, const std::string& data);
 
+		/**
+		 * Manipulate a single byte in eeprom
+		 * @param index offset where to start
+		 * @param data new data to write
+		 * @return number of bytes copied, <0 for error
+		 */
+		int manip_eeprom(std::size_t index, const std::uint8_t data);
+
 	protected:
 		std::vector<std::uint8_t> eeprom;
 		tcv_t* tcv;
