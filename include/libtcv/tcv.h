@@ -777,12 +777,12 @@ int tcv_get_vendor_date_code(tcv_t *tcv, tcv_date_code_t *date_code);
  */
 typedef union {
 	struct {
-		char dd_implemented:1;
-		char internally_calibrated:1;
-		char externally_calibrated:1;
-		char pwr_measurement_type:1;
-		char address_change_required:1;
-		char reserved :3;
+		uint8_t reserved :3;
+		uint8_t dd_implemented:1;
+		uint8_t internally_calibrated:1;
+		uint8_t externally_calibrated:1;
+		uint8_t pwr_measurement_type:1;
+		uint8_t address_change_required:1;
 	} bits;
 	uint8_t bmp;
 } tcv_diagnostic_type_t;

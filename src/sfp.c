@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+
 #include "libtcv/tcv.h"
 #include "libtcv/sfp.h"
 
@@ -762,15 +763,18 @@ int sfp_get_vendor_name(tcv_t *tcv, char vendor_name[BASIC_INFO_REG_VENDOR_NAME_
 
 int sfp_get_vendor_oui(tcv_t *tcv)
 {
-	int oui = 0;
+	uint32_t oui = 0;
 	int i;
 
 	if (tcv == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
 
 	/* Concatenate the 3 bytes in just one variable */
-	for (i = 0; i < BASIC_INFO_REG_VENDOR_OUI_SIZE_SIZE; i++)
-		oui |= ((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_VENDOR_OUI + i] << (8 * i);
+	for (i = 0; i < BASIC_INFO_REG_VENDOR_OUI_SIZE_SIZE; i++){
+		/* bytes are stored in eeprom in big endian order */
+		oui = (oui<< 8);
+		oui |= ((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_VENDOR_OUI+i];
+	}
 
 	return oui;
 }
@@ -1114,11 +1118,11 @@ int sfp_get_vendor_date_code(tcv_t *tcv, tcv_date_code_t *date_code)
  | Reg  | Bit | Description                      |
  +------+-----+----------------------------------+
  | 0x5C | 7   | Reserved                         |
- | 0x5C | 5   | DD implemented                   |
- | 0x5C | 4   | Internally calibrated            |
- | 0x5C | 3   | Externally calibrated            |
- | 0x5C | 2   | Received power measurement type  |
- | 0x5C | 1   | Address change required          |
+ | 0x5C | 6   | DD implemented                   |
+ | 0x5C | 5   | Internally calibrated            |
+ | 0x5C | 4   | Externally calibrated            |
+ | 0x5C | 3   | Received power measurement type  |
+ | 0x5C | 2   | Address change required          |
  | 0x5C | 1-0 | Unallocated                      |
  +------+-----+----------------------------------+
 */
@@ -1130,7 +1134,7 @@ int sfp_get_diagnostic_type(tcv_t *tcv, tcv_diagnostic_type_t *diag_type)
 	if (tcv == NULL || diag_type == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
 
-	diag_type->bmp = (((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_DIAG_MONITORING_TYPE] && DIAG_TYPE_MASK) >> 2;
+	diag_type->bmp = (((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_DIAG_MONITORING_TYPE] & DIAG_TYPE_MASK) >> 2;
 
 	return 0;
 }
@@ -1159,7 +1163,7 @@ int sfp_get_enhance_options(tcv_t *tcv, tcv_enhanced_options_type_t *options)
 	if (tcv == NULL || options == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
 
-	options->bmp = (((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_ENHANCED_OPTIONS] && ENHANCED_OPTIONS_MASK) >> 1;
+	options->bmp = (((sfp_data_t*)tcv->data)->a0[BASIC_INFO_REG_ENHANCED_OPTIONS] & ENHANCED_OPTIONS_MASK) >> 1;
 
 	return 0;
 }

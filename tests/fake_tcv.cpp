@@ -91,4 +91,27 @@ int FakeTCV::write(tcv_dev_addr_t device, std::uint8_t regaddr,
 	return 0;
 }
 
+int FakeTCV::manip_eeprom(std::size_t index,
+                          const std::vector<std::uint8_t>& data)
+{
+	size_t space = eeprom.size() - index;
+	/* only copy what fits in vector*/
+	int elements = (data.size() > space) ? data.size() - space : data.size();
+
+	std::copy_n(data.begin(), elements, eeprom.begin() + index);
+
+	return elements;
 }
+
+
+int FakeTCV::manip_eeprom(std::size_t index, const std::string& data)
+{
+	size_t space = eeprom.size() - index;
+	/* only copy what fits in vector*/
+	int elements = (data.size() > space) ? data.size() - space : data.length();
+	std::copy_n(data.begin(),elements,eeprom.begin()+index);
+
+	return elements;
+}
+
+} /*namespace */

@@ -92,9 +92,18 @@ class FakeTCV
 		 * Manipulate eeprom content for test
 		 * @param index offset where to start
 		 * @param data new data to write
+		 * @return number of bytes copied, <0 for error
 		 */
-		void manip_eeprom(std::size_t index,
+		int manip_eeprom(std::size_t index,
 		        const std::vector<std::uint8_t>& data);
+
+		/**
+		 * Manipulate eeprom content for test
+		 * @param index offset where to start
+		 * @param data new data to write
+		 * @return number of bytes copied, <0 for error
+		 */
+		int manip_eeprom(std::size_t index, const std::string& data);
 
 	protected:
 		std::vector<std::uint8_t> eeprom;
@@ -111,6 +120,8 @@ class FakeSFP: public FakeTCV
 				: diagnostics_size(256)
 		{
 			eeprom[0] = TCV_TYPE_SFP;
+			/* Digital diagnostics, internally calibrated, rx_pwr=avg */
+			eeprom[92] = (1<<6) | (1<<5) |(1<<3);
 		}
 		;
 	private:
