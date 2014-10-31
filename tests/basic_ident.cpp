@@ -197,7 +197,7 @@ TEST_F(TestFixtureClass, diagnosticsTypeValid)
 	tcv_t *tcv = mtcv->get_ctcv();
 	uint8_t diag_caps = 0x60;
 	tcv_diagnostic_type_t diags;
-	mtcv->manip_eeprom(92, vector<uint8_t>(1, diag_caps));
+	mtcv->manip_eeprom(92, diag_caps);
 	tcv_init(tcv);
 	EXPECT_EQ(0, tcv_get_diagnostic_type(tcv, &diags));
 
@@ -216,7 +216,7 @@ TEST_F(TestFixtureClass, diagnosticsTypeInValid)
 	tcv_t *tcv = mtcv->get_ctcv();
 	uint8_t diag_caps = 0xFF;
 	tcv_diagnostic_type_t diags;
-	mtcv->manip_eeprom(92, vector<uint8_t>(1, diag_caps));
+	mtcv->manip_eeprom(92,  diag_caps);
 	tcv_init(tcv);
 	EXPECT_EQ(0, tcv_get_diagnostic_type(tcv, &diags));
 	/* Function should truncate invalid crap */
@@ -231,7 +231,7 @@ TEST_F(TestFixtureClass, enhancedOptionsValid)
 	tcv_t *tcv = mtcv->get_ctcv();
 	uint8_t raw = 0x5A;
 	tcv_enhanced_options_type_t eopts;
-	mtcv->manip_eeprom(93, vector<uint8_t>(1, raw));
+	mtcv->manip_eeprom(93,  raw);
 	tcv_init(tcv);
 	EXPECT_EQ(0, tcv_get_enhanced_options(tcv, &eopts));
 	EXPECT_EQ(0x2D,eopts.bmp);
@@ -245,7 +245,7 @@ TEST_F(TestFixtureClass, enhancedOptionsInValid)
 	tcv_t *tcv = mtcv->get_ctcv();
 	uint8_t raw = 0xFF;
 	tcv_enhanced_options_type_t eopts;
-	mtcv->manip_eeprom(93, vector<uint8_t>(1, raw));
+	mtcv->manip_eeprom(93,  raw);
 	tcv_init(tcv);
 	EXPECT_EQ(0, tcv_get_enhanced_options(tcv, &eopts));
 	EXPECT_EQ(0x7F,eopts.bmp);
@@ -297,6 +297,58 @@ TEST_F(TestFixtureClass, getVendorRomSize)
 }
 
 
+/* Test for diagnositcs type */
+TEST_F(TestFixtureClass, getEthStandardCode)
+{
+	auto mtcv = get_tcv(1);
+	tcv_t *tcv = mtcv->get_ctcv();
+	tcv_eth_compliance_codes_t code;
+
+	mtcv->manip_eeprom(6, (1<<3));
+	tcv_init(tcv);
+	EXPECT_EQ(0, tcv_get_eth_compliance_codes(tcv, &code));
+	EXPECT_NE(0,code.bits.eth_1000_base_t);
+
+	mtcv->manip_eeprom(6, (1<<4));
+	tcv_init(tcv);
+	EXPECT_EQ(0, tcv_get_eth_compliance_codes(tcv, &code));
+	EXPECT_NE(0, code.bits.eth_100base_lx_lx10);
+	EXPECT_EQ(0, code.bits.eth_1000_base_t);
+
+	mtcv->manip_eeprom(6, 1);
+	tcv_init(tcv);
+	EXPECT_EQ(0, tcv_get_eth_compliance_codes(tcv, &code));
+	EXPECT_NE(0, code.bits.eth_1000_base_sx);
+	EXPECT_EQ(0, code.bits.eth_base_px);
+}
+
+
+/* Test for diagnositcs type */
+TEST_F(TestFixtureClass, get10GStandardCode)
+{
+	auto mtcv = get_tcv(1);
+	tcv_t *tcv = mtcv->get_ctcv();
+	tcv_10g_eth_compliance_codes_t code;
+	mtcv->manip_eeprom(3, (0xF)); //Infiniband - should not show up in 10GbE
+	tcv_init(tcv);
+	EXPECT_EQ(0, tcv_get_10g_compliance_codes(tcv, &code));
+	EXPECT_EQ(0, code.bmp);
+
+	mtcv->manip_eeprom(3, (1<<4));
+	tcv_init(tcv);
+	EXPECT_EQ(0, tcv_get_10g_compliance_codes(tcv, &code));
+	EXPECT_NE(0, code.bits.eth10g_base_sr);
+
+	mtcv->manip_eeprom(3, (1<<7));
+	tcv_init(tcv);
+	EXPECT_EQ(0, tcv_get_10g_compliance_codes(tcv, &code));
+	EXPECT_NE(0, code.bits.eth10g_base_er);
+}
+
+
+
+
+
 /**
  * Put this test at the end since asan will bail out
  */
@@ -312,3 +364,4 @@ TEST_F(TestFixtureClass, doubleDestroy)
 	ret = tcv_destroy(tcv); //really bad use after free()!
 	ASSERT_EQ(TCV_ERR_INVALID_ARG, ret);
 }
+

@@ -56,7 +56,6 @@ bool FakeTCV::range_is_valid(tcv_dev_addr_t device, std::size_t offset,
 int FakeTCV::read(tcv_dev_addr_t device, std::uint8_t regaddr,
         std::uint8_t * data, std::size_t len) const
 {
-	size_t space;
 	int elements;
 	switch (device) {
 		case a0:
@@ -118,6 +117,15 @@ int FakeTCV::manip_eeprom(std::size_t index, const std::string& data)
 	std::copy_n(data.begin(),elements,eeprom.begin()+index);
 
 	return elements;
+}
+
+
+int FakeTCV::manip_eeprom(std::size_t index, const std::uint8_t data){
+	if(index >= eeprom.size())
+		return 0;
+
+	eeprom[index] = data;
+	return 1;
 }
 
 } /*namespace */

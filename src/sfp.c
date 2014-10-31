@@ -256,11 +256,7 @@ int sfp_get_10g_compliance_codes(tcv_t *tcv, tcv_10g_eth_compliance_codes_t *cod
 	if (tcv == NULL || codes == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
 
-	/* Clear bitmap */
-	codes->bmp = 0;
-
 	/* Fill bitmap */
-	codes->bmp = 0;
 	codes->bmp = (((sfp_data_t*)tcv->data)->a0[SFP_10G_ETH_COMPLIANCE_REG] & SFP_10G_ETH_COMPLIANCE_MASK) >> 4;
 
 	return 0;
