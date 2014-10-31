@@ -345,6 +345,19 @@ TEST_F(TestFixtureClass, get10GStandardCode)
 	EXPECT_NE(0, code.bits.eth10g_base_er);
 }
 
+/* Test for diagnositcs type */
+TEST_F(TestFixtureClass, tcvReadRaw)
+{
+	char buf[128]={0};
+	auto mtcv = get_tcv(1);
+	tcv_t *tcv = mtcv->get_ctcv();
+	string name = "Fritz & Frieda  "; //16 chars
+	/*write the name to eeprom */
+	EXPECT_EQ(mtcv->manip_eeprom(100, name), name.length());
+	tcv_init(tcv);
+	EXPECT_EQ(name.length(),tcv_read(tcv,0x50, 100, reinterpret_cast<uint8_t*>(buf), name.length()));
+	EXPECT_STREQ(name.c_str(), buf);
+}
 
 
 

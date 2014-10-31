@@ -37,6 +37,10 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#ifdef __cplusplus
+extern "C"{
+#endif
+
 /******************************************************************************/
 /* Transceiver identifier types */
 #define TCV_TYPE_UNKNOWN			0x00
@@ -200,10 +204,10 @@ int tcv_get_connector(tcv_t *tcv);
  */
 typedef union {
 	struct {
-		char eth10g_base_er :1;
-		char eth10g_base_lrm :1;
-		char eth10g_base_lr :1;
 		char eth10g_base_sr :1;
+		char eth10g_base_lr :1;
+		char eth10g_base_lrm :1;
+		char eth10g_base_er :1;
 		char reserved :4;
 	} bits;
 	uint8_t bmp;
@@ -897,4 +901,8 @@ const uint8_t* tcv_get_8079_rom(tcv_t *tcv);
 
 /******************************************************************************/
 
+
+#ifdef __cplusplus
+} /*extern "C" */
+#endif
 #endif /* __LIBTCV_TCV_H__ */
