@@ -35,20 +35,6 @@
 #include "libtcv/tcv.h"
 
 /******************************************************************************/
-/**
- * \brief	SFP structure.
- *
- * It's an SFP representation, it's valid for both SFP and SFP+.
- */
-typedef struct {
-	uint8_t type;	//! Transceiver type
-	uint8_t a0[256];	//! Internal device 0xA0 (Basic info)
-	uint8_t a2[256];	//! Internal device 0xA2 (Digital Diagnostic)
-	uint8_t ac[256];	//! Internal device 0xAc (Internal PHY)
-} sfp_data_t;
-
-
-/******************************************************************************/
 
 /**
  * \brief initialization function for sfp_data

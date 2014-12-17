@@ -191,40 +191,6 @@ TEST_F(TestFixtureClass, extendedIdent)
 
 
 /* Test for diagnositcs type */
-TEST_F(TestFixtureClass, diagnosticsTypeValid)
-{
-	auto mtcv = get_tcv(1);
-	tcv_t *tcv = mtcv->get_ctcv();
-	uint8_t diag_caps = 0x60;
-	tcv_diagnostic_type_t diags;
-	mtcv->manip_eeprom(92, diag_caps);
-	tcv_init(tcv);
-	EXPECT_EQ(0, tcv_get_diagnostic_type(tcv, &diags));
-
-	EXPECT_EQ(diags.bits.address_change_required, 0);
-	EXPECT_EQ(diags.bits.pwr_measurement_type, 0);
-	EXPECT_EQ(diags.bits.internally_calibrated, 1);
-	EXPECT_EQ(diags.bits.externally_calibrated, 0);
-	EXPECT_EQ(diags.bits.dd_implemented, 1);
-
-}
-
-/* Test for diagnositcs type */
-TEST_F(TestFixtureClass, diagnosticsTypeInValid)
-{
-	auto mtcv = get_tcv(1);
-	tcv_t *tcv = mtcv->get_ctcv();
-	uint8_t diag_caps = 0xFF;
-	tcv_diagnostic_type_t diags;
-	mtcv->manip_eeprom(92,  diag_caps);
-	tcv_init(tcv);
-	EXPECT_EQ(0, tcv_get_diagnostic_type(tcv, &diags));
-	/* Function should truncate invalid crap */
-	EXPECT_EQ(diags.bmp, 0x1F);
-}
-
-
-/* Test for diagnositcs type */
 TEST_F(TestFixtureClass, enhancedOptionsValid)
 {
 	auto mtcv = get_tcv(1);

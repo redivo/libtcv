@@ -32,11 +32,38 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <stdint.h>
+#include <math.h>  /* digital diagnostics pow() */
+#include <arpa/inet.h> /* nthol */
 
-#include "libtcv/tcv_internal.h"
 #include "libtcv/sfp.h"
+#include "libtcv/tcv.h"
+#include "libtcv/tcv_internal.h"
 
 
+/******************************************************************************/
+/**
+ * \brief	SFP structure.
+ *
+ * SFP Eeprom structure, valid for both SFP and SFP+.
+ */
+typedef struct {
+	uint8_t type;	//! Transceiver type
+	uint8_t a0[256];	//! Internal device 0xA0 (Basic info)
+	uint8_t user_writable_eeprom[120];	//! Internal user writable eeprom
+	uint8_t ac[256];	//! Internal device 0xAc (Internal PHY)
+} sfp_data_t;
+
+/**
+ * \brief Transceiver Digital Diagnostics Type
+ *
+ */
+typedef enum calibration_type{
+	DD_UNAVAILABLE, 	//! Does not have Digital Diagnostics or DD are unaccessible
+	DD_CALIB_INTERNAL,  //! Values are internally calibrated
+	DD_CALIB_EXTERNAL,	//! Values are calculated via external calibration rules
+	DD_CALIB_UNKNOWN,	//! Digital diagnostics unknown (neither internal nor external)
+}en_calibration_type;
 
 /******************************************************************************/
 
@@ -80,6 +107,11 @@
  | 128-255 | 128  | Reserved                       | --    |
  +---------+------+--------------------------------+-------+
 */
+
+/**
+ * \brief I2C address of EEPROM for MSA specified information
+ */
+const uint8_t  EEPROM_DEVICE_ADDR = 0x50;
 
 /******************************************************************************/
 
@@ -180,18 +212,60 @@
 #define BASIC_INFO_REG_RESERVED_SIZE					128
 
 
+/****
+ * Digital Diagnostic Registers
+ */
+#define DD_DEVICE_ADDRESS								(0x51)
+
+/** Temperature */
+#define DD_TEMP_SLOPE_REG 								(84)
+#define DD_TEMP_SLOPE_SIZE 								(2)
+#define DD_TEMP_OFFSET_REG								(86)
+#define DD_TEMP_OFFSET_SIZE 							(2)
+#define DD_TEMP_AD_REG									(96)
+#define DD_TEMP_AD_SIZE 								(2)
+
+/** Voltage */
+#define DD_VCC_SLOPE_REG 								(88)
+#define DD_VCC_SLOPE_SIZE 								(2)
+#define DD_VCC_OFFSET_REG								(90)
+#define DD_VCC_OFFSET_SIZE 								(2)
+#define DD_VCC_AD_REG									(98)
+#define DD_VCC_AD_SIZE 									(2)
+
+/** TX-Power */
+#define DD_TX_PWR_SLOPE_REG 							(80)
+#define DD_TX_PWR_SLOPE_SIZE 							(2)
+#define DD_TX_PWR_OFFSET_REG							(82)
+#define DD_TX_PWR_OFFSET_SIZE 							(2)
+#define DD_TX_PWR_AD_REG								(102)
+#define DD_TX_PWR_AD_SIZE 								(2)
+
+/** TX-Current */
+#define DD_TX_CUR_SLOPE_REG 							(76)
+#define DD_TX_CUR_SLOPE_SIZE 							(2)
+#define DD_TX_CUR_OFFSET_REG							(78)
+#define DD_TX_CUR_OFFSET_SIZE 							(2)
+#define DD_TX_CUR_AD_REG								(100)
+#define DD_TX_CUR_AD_SIZE 								(2)
+
+/** RX-Power */
+#define DD_RX_PWR_CAL									(56)
+#define DD_RX_PWR_CAL_SIZE	 							(5*4) /* 5*32Bit Float */
+#define DD_RX_PWR_AD_REG								(104)
+#define DD_RX_PWR_AD_SIZE 								(2)
+
 
 /******************************************************************************/
 int sfp_init(tcv_t* tcv){
 	int ret;
 	sfp_data_t * sfp_data;
-	const uint8_t  FIXED_DATA_PAGE = 0x50;
 
 	sfp_data = malloc(sizeof(sfp_data_t));
 	if(!sfp_data){
 		return TCV_ERR_GENERIC;
 	}
-	ret = tcv->read(tcv->index, FIXED_DATA_PAGE, 0, sfp_data->a0, sizeof(sfp_data->a0));
+	ret = tcv->read(tcv->index, EEPROM_DEVICE_ADDR, 0, sfp_data->a0, sizeof(sfp_data->a0));
 	if(ret < 0 ){
 		/*
 		 * Make sure we free after read-error
@@ -256,8 +330,9 @@ int sfp_get_10g_compliance_codes(tcv_t *tcv, tcv_10g_eth_compliance_codes_t *cod
 	if (tcv == NULL || codes == NULL || tcv->data == NULL)
 		return TCV_ERR_INVALID_ARG;
 
+	uint8_t raw = ((sfp_data_t*)tcv->data)->a0[SFP_10G_ETH_COMPLIANCE_REG];
 	/* Fill bitmap */
-	codes->bmp = (((sfp_data_t*)tcv->data)->a0[SFP_10G_ETH_COMPLIANCE_REG] & SFP_10G_ETH_COMPLIANCE_MASK) >> 4;
+	codes->bmp = ( raw & SFP_10G_ETH_COMPLIANCE_MASK) >> 4;
 
 	return 0;
 }
@@ -728,11 +803,37 @@ int sfp_get_om1_length(tcv_t *tcv)
 /******************************************************************************/
 static bool sfp_is_optical(tcv_t *tcv)
 {
-	// TODO
-	if (tcv)
-		return 1;
+	int conntype = tcv_get_connector(tcv);
+	if (conntype < 0)
+		return false;
 
-	return 1;
+	switch (conntype) {
+		/* SFF-8072:  Note that 01h to 05h are not SFP compatibe */
+		case TCV_CONN_STYLE_1_COPPER:
+		case TCV_CONN_STYLE_2_COPPER:
+		case TCV_CONN_BNC_TNC:
+		case TCV_CONN_COAXIAL_HEADERS:
+		/* SFP-Compatible Electrical connectors */
+		case TCV_CONN_HSSDC_II:
+		case TCV_CONN_COPPTER_PIGTAIL:
+		case TCV_CONN_RJ45:
+			return false;
+			/* SFP -compatible optical connectors */
+		case TCV_CONN_SC: /* not compatible but optical */
+		case TCV_CONN_FIBER_JACK:
+		case TCV_CONN_OPTICAL_PIGTAIL:
+		case TCV_CONN_LC:
+		case TCV_CONN_MT_RJ:
+		case TCV_CONN_MU:
+		case TCV_CONN_SG:
+		case TCV_CONN_MPO_PARALLEL_OPTIC:
+			return true;
+			/* Electrical TCVs are bad citizens, they usually respond "unknown",
+			 * so it make sense to default to false */
+		case TCV_CONN_UNKNOWN:
+			default:
+			return false;
+	}
 }
 
 int sfp_get_om4_length_copper_length(tcv_t *tcv)
@@ -1116,17 +1217,17 @@ int sfp_get_vendor_date_code(tcv_t *tcv, tcv_date_code_t *date_code)
 	/* Get year */
 	tmp[0] = ((sfp_data_t*)tcv->data)->a0[DATE_CODE_YEAR_1];
 	tmp[1] = ((sfp_data_t*)tcv->data)->a0[DATE_CODE_YEAR_2];
-	date_code->year = atoi(tmp);
+	date_code->year = (uint16_t) atoi(tmp);
 
 	/* Get month */
 	tmp[0] = ((sfp_data_t*)tcv->data)->a0[DATE_CODE_MONTH_1];
 	tmp[1] = ((sfp_data_t*)tcv->data)->a0[DATE_CODE_MONTH_2];
-	date_code->month = atoi(tmp);
+	date_code->month = (uint8_t)atoi(tmp);
 
 	/* Get day */
 	tmp[0] = ((sfp_data_t*)tcv->data)->a0[DATE_CODE_DAY_1];
 	tmp[1] = ((sfp_data_t*)tcv->data)->a0[DATE_CODE_DAY_2];
-	date_code->day = atoi(tmp);
+	date_code->day =(uint8_t) atoi(tmp);
 
 	/* Get lot code */
 	memcpy(date_code->vendor_lot_code, &((sfp_data_t*)tcv->data)->a0[DATE_CODE_LOT], DATE_CODE_LOT_SIZE);
@@ -1238,7 +1339,7 @@ const uint8_t* sfp_get_vendor_rom(tcv_t *tcv)
 
 /******************************************************************************/
 
-size_t sfp_get_vendor_rom_size(tcv_t *tcv)
+static size_t sfp_get_vendor_rom_size(tcv_t *tcv)
 {
 	if (tcv == NULL || tcv->data == NULL)
 		return 0;
@@ -1248,7 +1349,51 @@ size_t sfp_get_vendor_rom_size(tcv_t *tcv)
 
 /******************************************************************************/
 
-const uint8_t* sfp_get_8079_rom(tcv_t *tcv)
+const uint8_t* sfp_get_user_writable_eeprom(tcv_t *tcv)
+{
+	const uint8_t USER_WRITABLE_EEPROM_OFFSET = 128;
+	int ret;
+	sfp_data_t *sfp_data;
+
+	if (tcv == NULL || tcv->data == NULL)
+		return 0;
+
+	sfp_data = (sfp_data_t *) tcv->data;
+
+	/* Read the whole user_writable_eeprom_size area from digital diagnostics
+	 * into sfp_data->user_writable_eeprom */
+	ret = tcv->read(tcv->index, DD_DEVICE_ADDRESS, USER_WRITABLE_EEPROM_OFFSET,
+			sfp_data->user_writable_eeprom,
+			sizeof(sfp_data->user_writable_eeprom));
+
+	if (ret < 0)
+		return NULL;
+
+	return sfp_data->user_writable_eeprom;
+}
+
+/******************************************************************************/
+
+/**
+ * \brief	Inform the size of user writable eeprom area of page a2
+ * \param	tcv Pointer to transceiver structure
+ * \return	size of writable eeprom area of page a2
+ */
+static size_t sfp_get_user_writable_eeprom_size(tcv_t *tcv)
+{
+	sfp_data_t *sfp_data;
+
+	if (tcv == NULL || tcv->data == NULL)
+		return 0;
+
+	sfp_data = (sfp_data_t *) tcv->data;
+
+	return sizeof(sfp_data->user_writable_eeprom);
+}
+
+/******************************************************************************/
+
+static const uint8_t* sfp_get_8079_rom(tcv_t *tcv)
 {
 
 	const size_t SFF_8079_ROM_OFFSET = 128;
@@ -1260,23 +1405,361 @@ const uint8_t* sfp_get_8079_rom(tcv_t *tcv)
 }
 
 /******************************************************************************/
-int sfp_read(tcv_t* tcv, uint8_t devaddr, uint8_t regaddr, uint8_t* data, size_t len)
+static int sfp_read(tcv_t* tcv, uint8_t devaddr, uint8_t regaddr, uint8_t* data, size_t len)
 {
-	//TODO sanity check
-	return tcv->read(tcv->index, devaddr, regaddr, data, len);
+	const size_t EEPROM_SIZE = 256;
+	size_t nbytes = (regaddr+len > EEPROM_SIZE) ? EEPROM_SIZE-regaddr : len;
+	return tcv->read(tcv->index, devaddr, regaddr, data, nbytes);
 }
 
 /******************************************************************************/
-int sfp_write(tcv_t* tcv, uint8_t devaddr, uint8_t regaddr, uint8_t* data, size_t len)
+static int sfp_write(tcv_t* tcv, uint8_t devaddr, uint8_t regaddr, const uint8_t* data, size_t len)
 {
-	size_t nbytes = len;
+	const size_t EEPROM_SIZE = 256;
+	size_t nbytes = (regaddr+len > EEPROM_SIZE) ? EEPROM_SIZE-regaddr : len;
 
-	if (regaddr < 96)
+	/* Do not write in MSA specified EEPROM registers of device AC (standardized registers) */
+	if (devaddr == EEPROM_DEVICE_ADDR && regaddr < BASIC_INFO_REG_VENDORS_SPECIFIC)
 		return TCV_ERR_INVALID_ARG;
 
-	return tcv->write(tcv->index, devaddr, regaddr, data, len);
+	return tcv->write(tcv->index, devaddr, regaddr, data, nbytes);
 }
 
+
+/******************************************************************************/
+
+/**
+ * \brief Check SFF-8472 compliant Digital Diagnostics type
+ * \param tcv transceiver handle
+ * \return type of diagnostics
+ */
+static en_calibration_type sfp_dd_type(tcv_t* tcv){
+	tcv_diagnostic_type_t diag;
+	/* Check if DD available */
+	if (sfp_get_diagnostic_type(tcv, &diag) != 0)
+		return DD_UNAVAILABLE;
+
+	if (diag.bits.dd_implemented == 0)
+		return DD_UNAVAILABLE;
+
+	/* Get values - internally calibrated  */
+	if (diag.bits.internally_calibrated)
+		return DD_CALIB_INTERNAL;
+
+	/* Get values - extenally calibrated  */
+	if (diag.bits.externally_calibrated)
+		return DD_CALIB_EXTERNAL;
+
+	return DD_CALIB_UNKNOWN;
+}
+
+/******************************************************************************/
+
+
+/**
+ * \brief Convert array of 2 bytes to signed integer according to SFF-8472 Table 3.13
+ * \param scratch byte[0]=MSB w/sign bit
+ * \return singed int
+ */
+static int16_t char2_to_short(uint8_t scratch[2])
+{
+	int16_t val = (scratch[0] << 8) + scratch[1];
+	return val;
+}
+
+/******************************************************************************/
+
+
+/**
+ * \brief Get  externally calibrated temperature
+ *
+ * 		result = slope*val/256 + offset
+ * @param tcv 	transceiver
+ * @param temp  (out) signed 16-bit integer representing a 8.8 fixedpoint
+ * @return status 0 success (TCV_ERR_GENERIC) in case of ERROR
+ */
+static int get_temp_calib_f8(tcv_t* tcv, int16_t* temp){
+
+	uint8_t scratch[2];
+	int ad_val;
+	int slope;
+	int offset;
+
+	if (tcv->read(tcv->index, DD_DEVICE_ADDRESS, DD_TEMP_SLOPE_REG, scratch, sizeof(scratch)) < 0)
+		return TCV_ERR_GENERIC;
+	slope = char2_to_short(scratch);
+
+	if (tcv->read(tcv->index, DD_DEVICE_ADDRESS, DD_TEMP_OFFSET_REG, scratch, sizeof(scratch)) < 0)
+		return TCV_ERR_GENERIC;
+	offset=char2_to_short(scratch);
+
+	if (tcv->read(tcv->index, DD_DEVICE_ADDRESS, DD_TEMP_AD_REG, scratch, sizeof(scratch)) < 0)
+		return TCV_ERR_GENERIC;
+
+	ad_val = char2_to_short(scratch);
+
+	*temp = ((ad_val * slope)>>8)+offset;
+	return 0;
+}
+
+/******************************************************************************/
+
+
+/**
+ * \brief Direct access to Analogue/Digital converter value as unsigned short
+ *
+ * Used for VCC, TX-Power, TX-Bias in internally calibrated transceivers.
+ * \param tcv 	transceiver
+ * \param val_addr offset for digital diagnostics value
+ * \param val (out) value read 16-bit integer
+ * \return 0 for success, error code < 0 otherwise
+ */
+static int get_short_ad_val(tcv_t* tcv, uint8_t val_addr, int16_t* val){
+	uint8_t scratch[2];
+
+	if (tcv->read(tcv->index, DD_DEVICE_ADDRESS, val_addr, scratch, sizeof(scratch)) < 0)
+		return TCV_ERR_GENERIC;
+
+	*val =  char2_to_short(scratch);
+	return 0;
+}
+
+/******************************************************************************/
+
+
+/**
+ * \brief Calculate a digital diagnostics value as unsigned short integer
+ *
+ * 		result = slope*val/256 + offset
+ * \param tcv 	transceiver
+ * \param offset_addr register address for offset
+ * \param slope_addr  register address for gain
+ * \param val_addr    register address for measurement
+ * \param val - (out) processed value
+ * \return 0 for success or error_code < 0
+ */
+static int get_polynomial_value(tcv_t* tcv, uint8_t offset_addr, uint8_t slope_addr, uint8_t val_addr, int16_t* val)
+{
+
+	uint8_t scratch[2];
+	int ad_val;
+	int slope;
+	int16_t offset;
+
+	if (tcv->read(tcv->index, DD_DEVICE_ADDRESS, slope_addr, scratch, sizeof(scratch)) < 0)
+		return TCV_ERR_GENERIC;
+	slope = char2_to_short(scratch);
+
+	if (tcv->read(tcv->index, DD_DEVICE_ADDRESS, offset_addr, scratch, sizeof(scratch)) < 0)
+		return TCV_ERR_GENERIC;
+	offset = char2_to_short(scratch);
+
+	if (tcv->read(tcv->index, DD_DEVICE_ADDRESS, val_addr, scratch, sizeof(scratch)) < 0)
+		return TCV_ERR_GENERIC;
+
+	ad_val = char2_to_short(scratch);
+
+	/* slope is 8.8 fixed point --> divide by 256 */
+	*val =  (int16_t)((ad_val * slope)/256 + offset);
+	return 0;
+}
+
+
+/******************************************************************************/
+
+/**
+ * \brief Access and process digital diagnostics
+ *
+ * \param tcv transceiver handle
+ * \param offset_addr - register offset for absolute value correction
+ * \param slope_addr - register offset for calibration factor
+ * \param val_addr -  register offset for ad value
+ * \param val - (out) processed value
+ * \return 0 for success or error_code < 0
+ */
+static int get_dd_value(tcv_t* tcv, uint8_t offset_addr, uint8_t slope_addr, uint8_t val_addr, int16_t* val)
+{
+	tcv_diagnostic_type_t diag;
+	en_calibration_type calib;
+	int ret = TCV_ERR_GENERIC;
+
+	if (sfp_get_diagnostic_type(tcv, &diag) != 0)
+		return TCV_ERR_GENERIC;
+
+	calib = sfp_dd_type(tcv);
+	switch (calib) {
+		case DD_UNAVAILABLE:
+			ret = TCV_ERR_DIAGNOSTICS_INFO_NOT_PRESENT;
+			break;
+		case DD_CALIB_INTERNAL:
+			/* Get values - internally calibrated  */
+			ret = get_short_ad_val(tcv, val_addr, val);
+			break;
+		case DD_CALIB_EXTERNAL:
+			/* Get values - extenally calibrated  */
+			ret = get_polynomial_value(tcv, offset_addr, slope_addr, val_addr, val);
+			break;
+		default:
+			/* Neither internally nor externally calibrated */
+			ret = TCV_ERR_GENERIC;
+	}
+
+	return ret;
+}
+
+
+/******************************************************************************/
+
+/**
+ * \brief Read temperature of transceiver
+ * \param tcv transceiver handle
+ * \param temp (out) 8.8 Fixed point signed temperature value
+ * \return 0 for success, error code < 0 otherwise
+ */
+static int sfp_get_temp(tcv_t *tcv, int16_t* temp)
+{
+	int16_t val=0;
+	int err = 0;
+
+	en_calibration_type calib;
+
+	calib = sfp_dd_type(tcv);
+
+	switch (calib) {
+		case DD_UNAVAILABLE:
+			err = TCV_ERR_DIAGNOSTICS_INFO_NOT_PRESENT;
+			break;
+		case DD_CALIB_INTERNAL:
+			err = get_short_ad_val(tcv, DD_TEMP_AD_REG, &val);
+			break;
+		case DD_CALIB_EXTERNAL:
+			err = get_temp_calib_f8(tcv, &val);
+			break;
+		default:
+			err = TCV_ERR_GENERIC;
+	}
+	if (err < 0)
+		return err;
+
+	*temp = (int16_t) val;
+	return 0;
+}
+
+/******************************************************************************/
+
+/**
+ * \brief Read Supply and process supply voltage
+ * \param tcv transceiver handle
+ * \param vcc (out) voltage 0...65535 uV
+ * \return 0 for success, error code < 0 otherwise
+ */
+static int sfp_get_voltage(tcv_t *tcv, uint16_t* vcc)
+{
+	return get_dd_value(tcv, DD_VCC_OFFSET_REG, DD_VCC_SLOPE_REG, DD_VCC_AD_REG, (int16_t*)vcc);
+}
+/******************************************************************************/
+
+/**
+ * \brief Read output power and process optical tx power
+ * \param tcv transceiver handle
+ * \param pwr (out) power 0...65535 uW
+ * \return 0 for success, error code < 0 otherwise
+ */
+static int sfp_get_tx_pwr(tcv_t *tcv, uint16_t* pwr)
+{
+	return get_dd_value(tcv, DD_TX_PWR_OFFSET_REG, DD_TX_PWR_SLOPE_REG, DD_TX_PWR_AD_REG, (int16_t*)pwr);
+}
+
+/******************************************************************************/
+
+/**
+ * \brief Read and process supply current and process
+ * \param tcv transceiver handle
+ * \param cur (out) power 0...65535 uA
+ * \return 0 for success, error code < 0 otherwise
+ */
+static int sfp_get_tx_cur(tcv_t *tcv, uint16_t* cur)
+{
+	return get_dd_value(tcv, DD_TX_CUR_OFFSET_REG, DD_TX_CUR_SLOPE_REG, DD_TX_CUR_AD_REG, (int16_t*) cur);
+}
+/******************************************************************************/
+
+/**
+ *  \brief Converts to a float from a big-endian 4-byte source buffer.
+ *  	   taken from ethtool
+ *  \param source bytes form digital diagnostic (MSA defines BE)
+ *  \return IEE754 float
+ */
+static float befloattoh(const uint32_t source)
+{
+	union {
+		uint32_t src;
+		float dst;
+	} converter;
+
+	converter.src = ntohl(source);
+	return converter.dst;
+}
+
+
+/******************************************************************************/
+static int sfp_get_rx_pwr(tcv_t *tcv, uint16_t* pwr)
+{
+	/* really, in the standard its a float! */
+	uint32_t factors[5];
+	float pwrs[5];
+	uint16_t rxpwr;
+	float val = 0;
+	int i;
+	en_calibration_type calib;
+
+	calib = sfp_dd_type(tcv);
+
+	switch (calib) {
+		case DD_UNAVAILABLE:
+			return TCV_ERR_DIAGNOSTICS_INFO_NOT_PRESENT;
+		case DD_CALIB_INTERNAL:
+			/**
+			 * Internally calibrated value
+			 * AD register contains value
+			 */
+			return get_short_ad_val(tcv, DD_RX_PWR_AD_REG, (int16_t*)pwr);
+			break;
+
+		case DD_CALIB_EXTERNAL:
+			/**
+			 * Externally Calibrated value
+			 */
+			if (tcv->read(tcv->index, DD_DEVICE_ADDRESS, DD_RX_PWR_CAL, (uint8_t*) factors,
+					sizeof(factors)) < 0)
+				return TCV_ERR_GENERIC;
+
+			if (tcv->read(tcv->index, DD_DEVICE_ADDRESS, DD_RX_PWR_AD_REG, (uint8_t*) &rxpwr,
+					sizeof(rxpwr)) < 0)
+				return TCV_ERR_GENERIC;
+
+			rxpwr = ntohs(rxpwr);
+			pwrs[0] = 1.0f;  //rxpwr^0
+			pwrs[1] = rxpwr; //rxpwr^1
+			pwrs[2] = pwrs[1] * rxpwr; //rxpwr^2
+			pwrs[3] = pwrs[2] * rxpwr; //rxpwr^3
+			pwrs[4] = pwrs[3] * rxpwr; //rxpwr^4
+
+			for (i = 0; i < 5; i++) {
+				// Calibration factors are in reverse order in array
+				float fact = befloattoh(factors[4 - i]);
+				val += fact * pwrs[i]; // multiply accumulate
+			}
+
+			/* adjust to 16-Bit representation */
+			*pwr = (uint16_t) val;
+			return 0;
+
+		default:
+			/* Neither internally nor externally calibrated */
+			return TCV_ERR_GENERIC;
+	}
+}
 /******************************************************************************/
 
 
@@ -1325,7 +1808,14 @@ const struct tcv_functions sfp_funcs = {
 	.calculate_cc_ext = sfp_calculate_cc_ext,
 	.get_vendor_rom = sfp_get_vendor_rom,
 	.get_vendor_rom_size = sfp_get_vendor_rom_size,
+	.get_user_writable_eeprom = sfp_get_user_writable_eeprom,
+	.get_user_writable_eeprom_size = sfp_get_user_writable_eeprom_size,
 	.get_8079_rom = sfp_get_8079_rom,
 	.raw_read = sfp_read,
 	.raw_write = sfp_write,
+	.get_rx_pwr = sfp_get_rx_pwr,
+	.get_tx_pwr = sfp_get_tx_pwr,
+	.get_temp = sfp_get_temp,
+	.get_voltage = sfp_get_voltage,
+	.get_tx_cur = sfp_get_tx_cur,
 };

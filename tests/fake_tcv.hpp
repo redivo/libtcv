@@ -26,7 +26,7 @@
 /************************************************************************************/
 /**
  * \file   fake_tcv.hpp
- * \brief  
+ * \brief
  * \author  thomas.ruschival
  *  		Created on: Jun 18, 2014
  */
@@ -36,6 +36,7 @@
 #define FAKE_TCV_HPP_
 
 #include <cstdint>
+#include <cstddef>
 #include <iostream>
 #include <vector>
 
@@ -44,8 +45,6 @@
 #include "fake_hw_i2c.hpp"
 
 namespace TestDoubles {
-
-const std::size_t PAGESIZE = 256;
 
 /**
  * Possible device addresses
@@ -58,10 +57,9 @@ enum tcv_dev_addr_t
 class FakeTCV
 {
 	public:
-		FakeTCV(int index, i2c_read_cb_t read, i2c_write_cb_t write)
-				: eeprom(PAGESIZE, 0xFF)
+		FakeTCV(int index, i2c_read_cb_t read, i2c_write_cb_t write, std::size_t pagesize = 256)
+			: eeprom(pagesize,0xFF) , diagnostics(pagesize, 0xFF)
 		{
-			eeprom[0] = TCV_TYPE_UNKNOWN;
 			tcv = tcv_create(index, i2c_read, i2c_write);
 		}
 		;
@@ -77,19 +75,15 @@ class FakeTCV
 			tcv_destroy(tcv);
 		}
 
-
-		virtual bool range_is_valid(tcv_dev_addr_t device, std::size_t offset,
-		        std::size_t size) const;
-
-		tcv_t* get_ctcv()
+		tcv_t* get_ctcv() const
 		{
 			return tcv;
 		}
 		;
 
 		/**********************
-		 * Instrumentation functions
-		 **********************/
+		* Instrumentation functions
+		**********************/
 
 		/**
 		 * Manipulate eeprom content for test
@@ -97,7 +91,7 @@ class FakeTCV
 		 * @param data new data to write
 		 * @return number of bytes copied, <0 for error
 		 */
-		int manip_eeprom(std::size_t index,
+		virtual int manip_eeprom(std::size_t index,
 		        const std::vector<std::uint8_t>& data);
 
 		/**
@@ -106,7 +100,7 @@ class FakeTCV
 		 * @param data new data to write
 		 * @return number of bytes copied, <0 for error
 		 */
-		int manip_eeprom(std::size_t index, const std::string& data);
+		virtual  int manip_eeprom(std::size_t index, const std::string& data);
 
 		/**
 		 * Manipulate a single byte in eeprom
@@ -114,11 +108,70 @@ class FakeTCV
 		 * @param data new data to write
 		 * @return number of bytes copied, <0 for error
 		 */
-		int manip_eeprom(std::size_t index, const std::uint8_t data);
+		virtual int manip_eeprom(std::size_t index, const std::uint8_t data);
+
+		/**
+		 * Manipulate digital diagnostics
+		 * @param index offset where to start
+		 * @param data new data to write
+		 * @return number of bytes copied, <0 for error
+		 */
+		virtual int manip_dd(std::size_t index, std::uint8_t data);
+
+		/**
+		 * Manipulate digital diagnostics
+		 * @param index offset where to start
+		 * @param data written to eeprom with MSB at lower address
+		 * @return number of bytes copied, <0 for error
+		 */
+		virtual int manip_dd(std::size_t index, std::uint16_t data);
+
+		/**
+		 * Manipulate digital diagnostics values (wrap uint16_t)
+		 * @param index offset where to start
+		 * @param data written to eeprom with MSB at lower address
+		 * @return number of bytes copied, <0 for error
+		 */
+		virtual int manip_dd(std::size_t index, std::int16_t data);
+
+		/**
+		 * Convert 4-Byte word to big-endian and store in DD calibration
+		 * @param index eeprom address offset
+		 * @param data Host-Order data
+		 * @return number of bytes copied, <0 for error
+		 */
+		virtual int manip_dd(std::size_t index, std::uint32_t data);
+
+		/**
+		 * Manipulate digital diagnosticvcs
+		 * @param index offset where to start
+		 * @param data new data to write
+		 * @return number of bytes copied, <0 for error
+		 */
+		virtual int manip_dd(std::size_t index, const std::string& data);
+
+		/**
+		 * Manipulate digital diagnostics calibration data
+		 * @param index offset where to start
+		 * @param data written to dd calibration with MSB at lower address
+		 * @return number of bytes copied, <0 for error
+		 */
+		virtual int manip_dd(std::size_t index, float data);
 
 	protected:
 		std::vector<std::uint8_t> eeprom;
+		std::vector<uint8_t> diagnostics;
 		tcv_t* tcv;
+
+		/**
+		 * Checks if up to length bytes can be accessed in containter
+		 * @param container to operate on
+		 * @param offset index starting read/write
+		 * @param length number of requested elements
+		 * @return legth if it fits, maximum available elements otherwise
+		 */
+		template<typename T>
+		size_t cap_length(const std::vector<T> & container, size_t offset, size_t length) const;
 };
 
 /**
@@ -128,15 +181,16 @@ class FakeSFP: public FakeTCV
 {
 	public:
 		FakeSFP(int index, i2c_read_cb_t read, i2c_write_cb_t write)
-				: FakeTCV(index,read,write), diagnostics_size(256)
+				: FakeTCV(index,read,write)
 		{
 			eeprom[0] = TCV_TYPE_SFP;
 			/* Digital diagnostics, internally calibrated, rx_pwr=avg */
 			eeprom[92] = (1<<6) | (1<<5) |(1<<3);
 		}
 		;
-	private:
-		const std::size_t diagnostics_size;
+		/* overwrite read for Digital Diagnostics */
+		virtual int read(tcv_dev_addr_t device, std::uint8_t regaddr,
+		        std::uint8_t * data, std::size_t len) const;
 };
 
 /**
@@ -145,7 +199,8 @@ class FakeSFP: public FakeTCV
 class FakeXFP: public FakeTCV
 {
 	public:
-		FakeXFP(int index, i2c_read_cb_t read, i2c_write_cb_t write): FakeTCV(index,read,write)
+		FakeXFP(int index, i2c_read_cb_t read, i2c_write_cb_t write)
+				: FakeTCV(index, read, write, 128)
 		{
 			eeprom[0] = TCV_TYPE_XFP;
 		}
