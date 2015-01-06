@@ -36,21 +36,19 @@
 #include <vector>
 #include "fake_tcv.hpp"
 
+extern "C"{
+#include <arpa/inet.h> /* nthol, htons etc */
+}
+
 using namespace std;
 
 namespace TestDoubles{
 
 
-bool FakeTCV::range_is_valid(tcv_dev_addr_t device, std::size_t offset,
-        std::size_t len) const
+int FakeTCV::write(tcv_dev_addr_t device, std::uint8_t regaddr,
+		const std::uint8_t * data, std::size_t size)
 {
-	std::cout << " Eeprom " << eeprom.size() << " : " << eeprom[8] << std::endl;
-	switch (device) {
-		case a0:
-			return (offset + len <= eeprom.size() );
-		default:
-			return false;
-	}
+	return 0;
 }
 
 int FakeTCV::read(tcv_dev_addr_t device, std::uint8_t regaddr,
@@ -59,42 +57,17 @@ int FakeTCV::read(tcv_dev_addr_t device, std::uint8_t regaddr,
 	int elements;
 	switch (device) {
 		case a0:
-			if(regaddr >= eeprom.size())
-				return -1;
-
-			elements = (len+regaddr) > eeprom.size() ? eeprom.size() - regaddr : len;
-
-			std::copy_n(eeprom.begin() + regaddr, elements, data);
-			return elements;
-
-		case dd: /* dd not implemented */
+			elements = cap_length(eeprom, regaddr, len);
+			if(elements > 0)
+				copy_n(eeprom.begin()+regaddr, elements, data);
+			break;
 		default:
 			return -1;
 	}
-
-	return 0;
+	return elements;
 }
 
 
-int FakeTCV::write(tcv_dev_addr_t device, std::uint8_t regaddr,
-		const std::uint8_t * data, std::size_t size)
-{
-	if(!range_is_valid(device, regaddr, size))
-		return -1;
-
-	switch(device){
-		case a0:
-
-			std::copy(data, data+size, eeprom.begin()+regaddr);
-
-		break;
-		case dd: /* no write to DD */
-		default:
-			return -1;
-	}
-
-	return 0;
-}
 
 int FakeTCV::manip_eeprom(std::size_t index,
                           const std::vector<std::uint8_t>& data)
@@ -125,6 +98,100 @@ int FakeTCV::manip_eeprom(std::size_t index, const std::uint8_t data){
 		return 0;
 
 	eeprom[index] = data;
+	return 1;
+}
+
+template<typename T>
+size_t FakeTCV::cap_length(const std::vector<T> & container, size_t offset, size_t length) const
+{
+	if(container.size() <= offset)
+		return 0;
+
+	return (length+offset) > container.size() ? container.size() - offset : length;
+}
+
+int FakeSFP::read(tcv_dev_addr_t device, std::uint8_t regaddr,
+        std::uint8_t * data, std::size_t len) const
+{
+	int elements;
+	switch (device) {
+		case a0:
+			elements = cap_length(eeprom, regaddr, len);
+			if(elements > 0)
+				copy_n(eeprom.begin()+regaddr, elements, data);
+			break;
+		case dd:
+			elements = cap_length(diagnostics, regaddr, len);
+			if(elements > 0)
+				copy_n(diagnostics.begin()+regaddr, elements, data);
+			break;
+		default:
+			return -1;
+	}
+
+	return elements;
+}
+
+
+int FakeTCV::manip_dd(std::size_t index, std::uint8_t data)
+{
+	if(index >= diagnostics.size())
+		return 0;
+
+	diagnostics[index] = data;
+	return 1;
+}
+
+int FakeTCV::manip_dd(std::size_t index, std::uint16_t data)
+{
+	/** need 2 bytes */
+	if (index + 1 >= diagnostics.size())
+		return 0;
+
+	uint16_t tmp = htons(data);
+
+	diagnostics[index] = static_cast<uint8_t>(tmp & 0x00FF);
+	diagnostics[index + 1] = static_cast<uint8_t>(tmp >> 8);
+
+	return 2;
+}
+
+int FakeTCV::manip_dd(std::size_t index, std::int16_t data)
+{
+	return manip_dd(index, static_cast<std::uint16_t>(data));
+}
+
+
+
+int FakeTCV::manip_dd(std::size_t index, const std::string& data)
+{
+	size_t space = diagnostics.size() - index;
+	/* only copy what fits in vector*/
+	int elements = (data.size() > space) ? data.size() - space : data.length();
+	std::copy_n(data.begin(), elements, diagnostics.begin() + index);
+
+	return elements;
+}
+
+int FakeTCV::manip_dd(std::size_t index, uint32_t data)
+{
+	uint32_t bytes = htonl(data);
+	diagnostics[index] = (bytes & 0xFF);
+	diagnostics[index + 1] =((bytes >> 8) & 0xFF);
+	diagnostics[index + 2] =((bytes >> 16) & 0xFF);
+	diagnostics[index + 3] = ((bytes >> 24) & 0xFF);
+	return 4;
+}
+
+int FakeTCV::manip_dd(std::size_t index, float data)
+{
+	union {
+		uint32_t bytes;
+		float flt;
+	} converter;
+	converter.flt = data;
+
+	manip_dd(index,  converter.bytes);
 	return 1;
 }
 
