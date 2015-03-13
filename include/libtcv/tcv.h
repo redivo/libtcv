@@ -184,7 +184,7 @@ int tcv_get_ext_identifier(tcv_t *tcv);
 #define TCV_CONN_OPTICAL_PIGTAIL	0x0B
 #define TCV_CONN_MPO_PARALLEL_OPTIC	0x0C
 #define TCV_CONN_HSSDC_II			0x20
-#define TCV_CONN_COPPTER_PIGTAIL	0x21
+#define TCV_CONN_COPPER_PIGTAIL	0x21
 #define TCV_CONN_RJ45				0x22
 
 /**
@@ -1092,7 +1092,7 @@ int tcv_read(tcv_t *tcv, uint8_t devaddr, uint8_t regaddr, uint8_t* data, size_t
 int tcv_write(tcv_t *tcv, uint8_t devaddr, uint8_t regaddr, const uint8_t* data, size_t len);
 
 /**
- * Get the temperature of the transceiver as 16-Bit singed (8.8 fixed-point) integer
+ * Get the temperature of the transceiver as 16-Bit signed (8.8 fixed-point) integer
  * @param tcv
  * @param temp (out) current temperature
  * \return	0 if ok; code error otherwise.
@@ -1100,7 +1100,7 @@ int tcv_write(tcv_t *tcv, uint8_t devaddr, uint8_t regaddr, const uint8_t* data,
 int tcv_get_temperature(tcv_t* tcv, int16_t* temp);
 
 /**
- * Transceiver supply voltage as 16-Bit singed (8.8 fixed-point) integer
+ * Transceiver supply voltage as 16-Bit signed (8.8 fixed-point) integer
  * @param tcv initialized transceiver @see{tcv_init}
  * @param vcc (out) current voltage
  * \return	0 if ok; code error otherwise.
@@ -1108,7 +1108,7 @@ int tcv_get_temperature(tcv_t* tcv, int16_t* temp);
 int tcv_get_voltage(tcv_t* tcv, uint16_t* vcc);
 
 /**
- * Transmit-Current as 16-Bit singed (8.8 fixed-point) integer
+ * Transmit-Current as 16-Bit signed (8.8 fixed-point) integer
  * \param tcv initialized transceiver @see{tcv_init}
  * \param cur (out) tx-current (0.2 uA)
  * \return	0 if ok; code error otherwise.
@@ -1116,7 +1116,7 @@ int tcv_get_voltage(tcv_t* tcv, uint16_t* vcc);
 int tcv_get_tx_cur(tcv_t* tcv, uint16_t* cur);
 
 /**
- * Receive Power as 16-Bit singed (8.8 fixed-point) integer
+ * Receive Power as 16-Bit signed (8.8 fixed-point) integer
  * \param tcv initialized transceiver @see{tcv_init}
  * \param pwr (out) rx-power (0.1 uW)
  * \return	0 if ok; code error otherwise.
@@ -1124,7 +1124,7 @@ int tcv_get_tx_cur(tcv_t* tcv, uint16_t* cur);
 int tcv_get_rx_pwr(tcv_t* tcv, uint16_t* pwr);
 
 /**
- * Laser transmit power as 16-Bit singed (8.8 fixed-point) integer
+ * Laser transmit power as 16-Bit signed (8.8 fixed-point) integer
  * \param tcv initialized transceiver @see{tcv_init}
  * \param pwr (out) tx-power (0.1 uW)
  * \return	0 if ok; code error otherwise.
@@ -1132,7 +1132,7 @@ int tcv_get_rx_pwr(tcv_t* tcv, uint16_t* pwr);
 int tcv_get_tx_pwr(tcv_t* tcv, uint16_t* pwr);
 
 /**
- * Manufacturer defined max-temperture 16-Bit singed (8.8 fixed-point) integer
+ * Manufacturer defined max-temperture 16-Bit signed (8.8 fixed-point) integer
  * @param tcv initialized transceiver @see{tcv_init}
  * @param threshold (out) temperature warning threshold
  * \return	0 if ok; code error otherwise.
@@ -1140,7 +1140,7 @@ int tcv_get_tx_pwr(tcv_t* tcv, uint16_t* pwr);
 int tcv_get_temp_warning(tcv_t* tcv, uint16_t* threshold);
 
 /**
- * Manufacturer defined max-rx power as 16-Bit singed (8.8 fixed-point) integer
+ * Manufacturer defined max-rx power as 16-Bit signed (8.8 fixed-point) integer
  * @param tcv initialized transceiver @see{tcv_init}
  * @param threshold (out) power warning threshold
  * \return	0 if ok; code error otherwise.
@@ -1148,7 +1148,7 @@ int tcv_get_temp_warning(tcv_t* tcv, uint16_t* threshold);
 int tcv_get_rx_pwr_warning(tcv_t* tcv, uint16_t* threshold);
 
 /**
- * Manufacturer defined max-tx power as 16-Bit singed (8.8 fixed-point) integer
+ * Manufacturer defined max-tx power as 16-Bit signed (8.8 fixed-point) integer
  * @param tcv initialized transceiver @see{tcv_init}
  * @param threshold (out) power warning threshold
  * \return	0 if ok; code error otherwise.
