@@ -815,7 +815,7 @@ static bool sfp_is_optical(tcv_t *tcv)
 		case TCV_CONN_COAXIAL_HEADERS:
 		/* SFP-Compatible Electrical connectors */
 		case TCV_CONN_HSSDC_II:
-		case TCV_CONN_COPPTER_PIGTAIL:
+		case TCV_CONN_COPPER_PIGTAIL:
 		case TCV_CONN_RJ45:
 			return false;
 			/* SFP -compatible optical connectors */
@@ -1459,7 +1459,7 @@ static en_calibration_type sfp_dd_type(tcv_t* tcv){
 /**
  * \brief Convert array of 2 bytes to signed integer according to SFF-8472 Table 3.13
  * \param scratch byte[0]=MSB w/sign bit
- * \return singed int
+ * \return signed int
  */
 static int16_t char2_to_short(uint8_t scratch[2])
 {
